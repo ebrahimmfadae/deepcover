@@ -1,6 +1,6 @@
 import { REMOVE } from "./permutation"
-import { cachedGenerator, isPOJO } from "./utils"
-import { MergeArray, MergeTwo, MergeUnion, PlainType } from "./utils.type"
+import { cachedGenerator } from "./utils"
+import { SoftMerge, TupleToUnion, MergeIntersection, HardMerge } from "./utils.type"
 
 export type GeneratorReturnType<T extends () => Generator> =
   T extends () => Generator<infer U> ? U : never
@@ -13,7 +13,7 @@ type OptionalKeys<T extends object> = {
 type AddQuestionMark<
   T extends object,
   O extends OptionalKeys<T> = OptionalKeys<T>,
-> = MergeUnion<
+> = MergeIntersection<
   { [K in O]?: Exclude<T[K], typeof REMOVE> } & {
     [K in Exclude<keyof T, O>]: T[K]
   }
@@ -45,16 +45,17 @@ export function max<const T>(generator: () => Generator<T>, max: number) {
 
 export function append<
   const T extends Record<string, unknown>,
-  const U extends () => Generator<Record<string, unknown>, void>,
+  U extends () => Generator<Record<string, unknown>, void>,
+  R = SoftMerge<HardMerge<T, GeneratorReturnType<U>>>,
 >(
   generator: () => Generator<T, void>,
   permute: (permutation: T) => U,
-): () => Generator<MergeTwo<T, GeneratorReturnType<U>>> {
+): () => Generator<R> {
   const g = generator()
   return function* () {
     for (const v of g) {
       for (const u of permute(v)()) {
-        yield { ...v, ...u } as MergeTwo<T, GeneratorReturnType<U>>
+        yield { ...v, ...u } as R
       }
     }
   }
@@ -62,25 +63,23 @@ export function append<
 
 export function appendInfinite<
   const T extends Record<string, unknown>,
-  const U extends () => Generator<Record<string, unknown>, void>,
->(
-  generator: () => Generator<T>,
-  permute: U,
-): () => Generator<MergeTwo<T, GeneratorReturnType<U>>> {
+  U extends () => Generator<Record<string, unknown>, void>,
+  R = HardMerge<T, GeneratorReturnType<U>>,
+>(generator: () => Generator<T>, permute: U): () => Generator<R> {
   const g = generator()
   return function* () {
     const p = permute()
     for (const v of g) {
       const { done, value } = p.next()
       if (done) throw Error("Illegal state")
-      yield { ...v, ...value } as MergeTwo<T, GeneratorReturnType<U>>
+      yield { ...v, ...value } as R
     }
   }
 }
 
 export function enums<const T extends any[]>(
   enums: T,
-): () => Generator<MergeArray<T>, void> {
+): () => Generator<TupleToUnion<T>, void> {
   return function* () {
     yield* enums
   }
