@@ -1,53 +1,32 @@
 import { CompareResult } from "./compare"
-import { DeepPermuted } from "./permutation"
-import { Loosen, PartialRecord } from "./utils.type"
+import { GeneratorReturnType } from "./permutationGenerators"
+import { AllKeys, PartialRecord } from "./utils.type"
 
-export type Seed = {
-  VALID?: any
-  INVALID?: any
+export type UpdatedObject<TBase, TData> = {
+  base: TBase
+  data: TData
+  mutatedFields: CompareResult<string>[]
 }
 
-export type MutationFunction<T> = (base: T, payload: any) => unknown
-
 export function factory<TActions extends string>() {
-  type FunctionSchema<T = Readonly<unknown>> = (...args: any[]) => T
+  type FunctionSchema = (...args: any[]) => unknown
+  type KeepFunctions<T> = T extends FunctionSchema ? T : never
+  type MutationFunction<T, R extends T = T> = (base: T, payload: any) => R
   type PermutationMapSchema = PartialRecord<
     TActions,
-    (...args: any[]) => readonly unknown[]
+    () => () => Generator<UpdatedObject<unknown, unknown> | unknown>
   >
-  type PermutationFunction<T, R> = (
-    base: DeepPermuted<T>,
-    payload: unknown,
-  ) => R
   return {
-    permutation<T extends Seed, TValid = T["VALID"]>() {
-      type PermutationSchema = {
-        VALID?: PartialRecord<
-          TActions,
-          PermutationFunction<TValid, readonly unknown[]>
-        >
-        INVALID?: PartialRecord<
-          TActions,
-          PermutationFunction<
-            TValid,
-            | readonly {
-                base: DeepPermuted<TValid>
-                data: unknown
-                mutatedFields: CompareResult<string>[]
-              }[]
-            | readonly unknown[]
-          >
-        >
-      }
-      return function <U extends PermutationSchema>(object: U) {
+    permutation() {
+      return function <U extends PermutationMapSchema>(object: U) {
         return object
       }
     },
     fill<T extends PermutationMapSchema>() {
       type FillSchema = {
-        [K in keyof T]?: T[K] extends FunctionSchema
-          ? MutationFunction<Loosen<ReturnType<T[K]>[number]>>
-          : unknown
+        [K in AllKeys<T>]?: MutationFunction<
+          GeneratorReturnType<ReturnType<KeepFunctions<T[K]>>>
+        >
       }
       return function <U extends FillSchema>(object: U) {
         return object
@@ -55,9 +34,9 @@ export function factory<TActions extends string>() {
     },
     assert<T extends PermutationMapSchema>() {
       type AssertSchema = {
-        [K in keyof T]?: T[K] extends FunctionSchema
-          ? MutationFunction<ReturnType<T[K]>[number]>
-          : unknown
+        [K in AllKeys<T>]?: MutationFunction<
+          GeneratorReturnType<ReturnType<KeepFunctions<T[K]>>>
+        >
       }
       return function <U extends AssertSchema>(object: U) {
         return object
