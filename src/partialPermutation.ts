@@ -1,6 +1,12 @@
-import { compare } from "./compare"
+import { CompareResult, compare } from "./compare"
 import { object, one } from "./permutationGenerators"
 import { subsetWithSize } from "./subset"
+
+export type UpdatedObject<TBase, TData> = {
+  base: TBase
+  data: TData
+  mutatedFields: CompareResult<string>[]
+}
 
 export function convertToPermutation(object: object) {
   const entries = Object.entries(object)
@@ -33,7 +39,7 @@ export function* partialPermute<
         base,
         data: v,
         mutatedFields: compare(base, data),
-      } as const
+      } as const satisfies UpdatedObject<unknown, unknown>
     }
   }
 }
