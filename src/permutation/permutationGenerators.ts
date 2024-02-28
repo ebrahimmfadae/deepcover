@@ -1,11 +1,11 @@
 import { REMOVE } from "./permutation"
-import { TupleToUnion } from "./types/common.type"
+import { TupleToUnion } from "../types/common.type"
 import {
   DeepMergeUnion,
   HardMerge,
   MergeIntersection,
-} from "./types/merge.type"
-import { cachedGenerator } from "./utils"
+} from "../types/merge.type"
+import { cachedGenerator } from "../utils"
 
 export type GeneratorReturnType<T extends () => Generator> =
   T extends () => Generator<infer U> ? U : never

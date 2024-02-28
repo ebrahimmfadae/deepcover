@@ -1,4 +1,4 @@
-import { isPOJO } from "./utils"
+import { isPOJO } from "../utils"
 
 export type CompareResult<T> = {
   key: T

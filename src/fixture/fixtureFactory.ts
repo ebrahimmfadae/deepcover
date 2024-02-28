@@ -1,7 +1,7 @@
-import { GeneratorReturnType } from "./permutationGenerators"
-import { PartialRecord } from "./types/common.type"
-import { DeepMergeUnion } from "./types/merge.type"
-import { AllKeys } from "./types/union.type"
+import { GeneratorReturnType } from "../permutation/permutationGenerators"
+import { PartialRecord } from "../types/common.type"
+import { DeepMergeUnion } from "../types/merge.type"
+import { AllKeys } from "../types/union.type"
 
 export type Permutation = {
   precondition?: PartialRecord<string, unknown>
