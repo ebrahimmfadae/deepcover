@@ -3,5 +3,6 @@
       "deepcover",
       "tsbuildinfo",
       "typecheck"
-   ]
+   ],
+   "typescript.tsdk": "node_modules/typescript/lib"
 }

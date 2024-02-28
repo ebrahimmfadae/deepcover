@@ -21,6 +21,17 @@ export type SoftMerge<T extends object> = MergeIntersection<
     [K in NonCommonKeys<T>]?: PickTypeOf<T, K>
   }
 >
+export type DeepSoftMerge<T extends object> = MergeIntersection<
+  {
+    [K in AllKeys<T>]: [T[K]] extends [Record<string, unknown>]
+      ? DeepSoftMerge<T[K]>
+      : PickTypeOf<T, K>
+  } & {
+    [K in NonCommonKeys<T>]?: [T[K]] extends [Record<string, unknown>]
+      ? DeepSoftMerge<T[K]>
+      : PickTypeOf<T, K>
+  }
+>
 export type Expandable<T> = T extends Record<string, unknown> ? T : void
 export type MergeIntersection<T> = PlainType<{ [K in keyof T]: T[K] }>
 export type Primitive = string | number | bigint | boolean | null | undefined
