@@ -1,6 +1,7 @@
 import { GeneratorReturnType } from "./permutationGenerators"
-import { AllKeys, PartialRecord } from "./types/common.type"
-import { DeepSoftMerge } from "./types/merge.type"
+import { PartialRecord } from "./types/common.type"
+import { DeepMergeUnion } from "./types/merge.type"
+import { AllKeys } from "./types/union.type"
 
 export type Permutation = {
   precondition?: PartialRecord<string, unknown>
@@ -24,7 +25,7 @@ export function factory<TActions extends string>() {
     populate<T extends PermutationSchema>() {
       type Schema = {
         [K in AllKeys<T>]?: MutationFunction<
-          DeepSoftMerge<GeneratorReturnType<ReturnType<KeepFunctions<T[K]>>>>
+          DeepMergeUnion<GeneratorReturnType<ReturnType<KeepFunctions<T[K]>>>>
         >
       }
       return function <U extends Schema>(object: U) {
@@ -33,9 +34,10 @@ export function factory<TActions extends string>() {
     },
     assertion<T extends PermutationSchema>() {
       type Schema = {
-        [K in AllKeys<T>]?: MutationFunction<
-          GeneratorReturnType<ReturnType<KeepFunctions<T[K]>>>
-        >
+        [K in AllKeys<T>]?: (
+          base: GeneratorReturnType<ReturnType<KeepFunctions<T[K]>>>,
+          payload: any,
+        ) => unknown
       }
       return function <U extends Schema>(object: U) {
         return object
