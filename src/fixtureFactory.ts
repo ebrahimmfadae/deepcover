@@ -1,5 +1,6 @@
 import { GeneratorReturnType } from "./permutationGenerators"
-import { AllKeys, DeepSoftMerge, PartialRecord, SoftMerge } from "./utils.type"
+import { AllKeys, PartialRecord } from "./types/common.type"
+import { DeepSoftMerge } from "./types/merge.type"
 
 export type Permutation = {
   precondition?: PartialRecord<string, unknown>

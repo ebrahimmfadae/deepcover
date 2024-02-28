@@ -1,11 +1,12 @@
 import { REMOVE } from "./permutation"
-import { cachedGenerator } from "./utils"
+import { TupleToUnion } from "./types/common.type"
 import {
+  DeepSoftMerge,
   HardMerge,
   MergeIntersection,
   SoftMerge,
-  TupleToUnion,
-} from "./utils.type"
+} from "./types/merge.type"
+import { cachedGenerator } from "./utils"
 
 export type GeneratorReturnType<T extends () => Generator> =
   T extends () => Generator<infer U> ? U : never
@@ -51,7 +52,7 @@ export function max<const T>(generator: () => Generator<T>, max: number) {
 export function append<
   const T extends Record<string, unknown>,
   U extends () => Generator<Record<string, unknown>, void>,
-  R = SoftMerge<HardMerge<T, GeneratorReturnType<U>>>,
+  R = DeepSoftMerge<HardMerge<T, GeneratorReturnType<U>>>,
 >(
   generator: () => Generator<T, void>,
   permute: (permutation: T) => U,

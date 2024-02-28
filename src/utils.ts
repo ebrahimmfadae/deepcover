@@ -13,11 +13,6 @@ export function cachedGenerator<T extends Generator>(generator: T) {
   } as () => T
 }
 
-export function escapeArray<T>(object: T) {
-  // TODO: Implement
-  return object
-}
-
 export function isPOJO(obj: unknown): obj is object {
   if (obj === null || typeof obj !== "object") return false
   const prototype = Object.getPrototypeOf(obj)
