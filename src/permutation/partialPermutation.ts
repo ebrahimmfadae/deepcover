@@ -1,6 +1,6 @@
-import { CompareResult, compare } from "../compare/compare"
+import { CompareResult, compare } from "../utils/compare/compare"
 import { object, one } from "./permutationGenerators"
-import { subsetWithSize } from "../subset/subset"
+import { subsetWithSize } from "../utils/subset"
 
 export type UpdatedObject<TBase, TData> = {
   base: TBase
