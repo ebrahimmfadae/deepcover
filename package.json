@@ -1,9 +1,11 @@
 {
   "name": "deepcover",
-  "version": "0.1.0",
+  "version": "0.1.0-rc.0",
   "description": "",
+  "main": "dist/index.js",
   "scripts": {
     "typecheck": "tsc --noEmit --incremental false",
+    "build": "tsc -p tsconfig.build.json",
     "test": "jest"
   },
   "author": "ebrahimmfadae@gmail.com",
@@ -17,5 +19,8 @@
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }
