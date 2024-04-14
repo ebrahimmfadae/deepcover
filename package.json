@@ -4,6 +4,7 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
+    "start": "node -r ts-node/register",
     "typecheck": "tsc --noEmit --incremental false",
     "build": "tsc -p tsconfig.build.json",
     "test": "jest"
