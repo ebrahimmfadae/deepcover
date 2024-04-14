@@ -1,4 +1,3 @@
-import { REMOVE } from "./permutation"
 import { TupleToUnion } from "../types/common.type"
 import {
   DeepMergeUnion,
@@ -6,7 +5,7 @@ import {
   MergeIntersection,
 } from "../types/merge.type"
 import { cachedGenerator } from "../utils/utils"
-import { subsetWithSize } from "../utils/subset"
+import { REMOVE } from "./permutation"
 
 export type GeneratorReturnType<T extends () => Generator> =
   T extends () => Generator<infer U> ? U : never
@@ -157,17 +156,5 @@ export function optional<const T>(
   return function* () {
     yield* g
     yield REMOVE
-  }
-}
-
-export function sparseObject<const T extends object>(
-  generator: () => Generator<T>,
-  size = 1,
-) {
-  const g = generator()
-  return function* () {
-    for (const v of g) {
-      yield* subsetWithSize(v, size)
-    }
   }
 }
