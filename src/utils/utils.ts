@@ -23,7 +23,7 @@ export function typeSafeIsArray<T>(arr: T | T[]): arr is T[] {
 	return Array.isArray(arr);
 }
 
-export class Atom<T = unknown> {
+export class Atom<T> {
 	constructor(public value: T) {}
 }
 

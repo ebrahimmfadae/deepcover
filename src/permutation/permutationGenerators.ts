@@ -1,4 +1,4 @@
-import { compare } from 'src/utils/compare/compare';
+import { compare } from '../utils/compare/compare';
 import type { TupleToUnion } from '../types/common.type';
 import type { DeepMergeUnion, HardMerge, MergeIntersection } from '../types/merge.type';
 import { cachedGenerator, cleanRemoveValues, deepMerge, isPOJO, routes } from '../utils/utils';
