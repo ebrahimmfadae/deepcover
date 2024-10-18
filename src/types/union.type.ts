@@ -1,4 +1,4 @@
-import type { PartialRecord } from './common.type';
+import type { PartialRecord } from './common.type.js';
 
 export type AllKeys<T> = T extends unknown ? keyof T : never;
 export type CommonKeys<T extends object> = keyof T;

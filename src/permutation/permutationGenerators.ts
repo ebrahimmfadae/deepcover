@@ -1,7 +1,7 @@
-import { compare } from '../utils/compare/compare';
-import type { TupleToUnion } from '../types/common.type';
-import type { DeepMergeUnion, HardMerge, MergeIntersection } from '../types/merge.type';
-import { cachedGenerator, cleanRemoveValues, deepMerge, isPOJO, routes } from '../utils/utils';
+import type { TupleToUnion } from '../types/common.type.js';
+import type { DeepMergeUnion, HardMerge, MergeIntersection } from '../types/merge.type.js';
+import { compare } from '../utils/compare/compare.js';
+import { cachedGenerator, cleanRemoveValues, deepMerge, isPOJO, routes } from '../utils/utils.js';
 
 export const REMOVE = Symbol.for('REMOVE');
 export const EXCLUDE = Symbol.for('EXCLUDE');

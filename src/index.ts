@@ -1,1 +1,1 @@
-export * from './permutation/permutationGenerators';
+export * from './permutation/permutationGenerators.js';

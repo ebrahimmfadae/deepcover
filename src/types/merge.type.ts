@@ -1,5 +1,5 @@
-import type { PlainType } from './common.type';
-import type { AllKeys, NonCommonKeys, PickTypeOf } from './union.type';
+import type { PlainType } from './common.type.js';
+import type { AllKeys, NonCommonKeys, PickTypeOf } from './union.type.js';
 
 export type HardMerge<Destination, Source> = {
 	[K in keyof Destination as K extends keyof Source ? never : K]: Destination[K];
