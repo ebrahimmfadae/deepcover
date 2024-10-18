@@ -1,9 +1,8 @@
 {
   "name": "deepcover",
-  "version": "0.1.0-rc.2",
+  "version": "0.1.0-rc.3",
   "description": "",
   "main": "dist/index.js",
-  "type": "module",
   "scripts": {
     "start": "node -r @swc-node/register",
     "test": "vitest --watch",
