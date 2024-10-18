@@ -220,7 +220,7 @@ export function excludeEmptyObject<const T extends object>(
 export function mutate<
 	const T extends PermutationGenerator<object>,
 	const U extends PermutationGenerator<object>,
->(base: T, mutation: U): PermutationGenerator<object> {
+>(base: T, mutation: U): PermutationGenerator<{ data: any; mutations: string[] }> {
 	return function* (context) {
 		for (const a of mutation(context)) {
 			const mutationKeys = routes(a);

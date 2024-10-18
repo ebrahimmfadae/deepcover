@@ -1,11 +1,11 @@
 {
   "name": "deepcover",
-  "version": "0.1.0-rc.4",
+  "version": "0.1.0-rc.5",
   "description": "",
   "exports": "./dist/index.js",
   "type": "module",
   "scripts": {
-    "start": "node -r @swc-node/register",
+    "start": "node --import @swc-node/register/esm-register",
     "test": "vitest --watch",
     "typecheck": "tsc --noEmit --incremental false",
     "build": "tsc -p tsconfig.build.json"
