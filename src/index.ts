@@ -1,2 +1,1 @@
-export * from "./permutation/permutationGenerators"
-export * from "./permutation/permutation"
+export * from './permutation/permutationGenerators';

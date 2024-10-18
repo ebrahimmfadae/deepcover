@@ -1,8 +1,11 @@
 {
    "cSpell.words": [
+      "backpropagation",
       "deepcover",
+      "Parens",
       "tsbuildinfo",
-      "typecheck"
+      "typecheck",
+      "unplugin"
    ],
    "typescript.tsdk": "node_modules/typescript/lib"
 }
