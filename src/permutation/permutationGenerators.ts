@@ -268,3 +268,12 @@ export function changePermutations<
 		}
 	};
 }
+
+export function concat<
+	const U extends PermutationGenerator[],
+	K = U[number] extends PermutationGenerator<infer T> ? T : never,
+>(...generators: U): PermutationGenerator<K> {
+	return function* (context) {
+		for (const g of generators) yield* g(context) as Generator<K>;
+	};
+}

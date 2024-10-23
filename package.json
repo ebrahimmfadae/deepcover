@@ -1,6 +1,6 @@
 {
   "name": "deepcover",
-  "version": "0.1.0-rc.5",
+  "version": "0.1.0-rc.6",
   "description": "",
   "exports": "./dist/index.js",
   "type": "module",
