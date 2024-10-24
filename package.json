@@ -8,18 +8,26 @@
     "start": "node --import @swc-node/register/esm-register",
     "test": "vitest --watch",
     "typecheck": "tsc --noEmit --incremental false",
-    "build": "tsc -p tsconfig.build.json"
+    "build": "tsc -p tsconfig.build.json",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "eslint:inspect": "npx @eslint/config-inspector"
   },
   "author": "ebrahimmfadae@gmail.com",
   "license": "MIT",
   "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "@swc-node/register": "^1.10.9",
     "@types/node": "^22.7.5",
+    "@vitest/coverage-v8": "^2.1.2",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "globals": "^15.11.0",
     "prettier": "^3.2.5",
     "typescript": "^5.6.3",
-    "@swc-node/register": "^1.10.9",
+    "typescript-eslint": "^8.11.0",
     "unplugin-swc": "^1.5.1",
-    "vitest": "^2.1.2",
-    "@vitest/coverage-v8": "^2.1.2"
+    "vitest": "^2.1.2"
   },
   "files": [
     "dist"
