@@ -1,4 +1,4 @@
-import { compare } from './compare.js';
+import { compare } from '#src/utils/compare/compare';
 
 describe('Test Compare', () => {
 	it('should compare two empty objects', () => {

@@ -61,6 +61,7 @@ export default [
 			'@typescript-eslint/array-type': 'error',
 			'@typescript-eslint/no-array-delete': 'error',
 			'import/no-extraneous-dependencies': 'error',
+			'import/no-unresolved': 'off',
 		},
 	},
 ];
