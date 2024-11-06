@@ -6,4 +6,15 @@ export type Eq<T extends number, U extends number> = T extends U
 		: false
 	: false;
 
-export type Min<T extends number, U extends number> = Subtract<T, U> extends never ? T : U;
+export type MinPositive<T extends number, U extends number> = number extends T
+	? U
+	: Subtract<T, U> extends never
+		? T
+		: U;
+
+export type MinTuple<T extends number[], N extends number = T[0]> = T extends [
+	infer Head extends number,
+	...infer U extends number[],
+]
+	? MinTuple<U, MinPositive<Head, N>>
+	: N;

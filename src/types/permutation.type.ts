@@ -1,14 +1,29 @@
 import type { REMOVE } from '#src/permutation/symbols';
 import type { MergeIntersection } from '#src/types/merge.type';
 
-export type PermutationContext = {
-	excludeKeys: string[];
-	route: string;
-	preserveRemoves: boolean;
+export type PermutationContext<T extends readonly string[] = readonly string[]> = {
+	removeRoutes?: T;
+	route?: string;
 };
-export type PermutationGenerator<T = unknown> = (context?: PermutationContext) => Generator<T>;
-export type GeneratorReturnType<T extends PermutationGenerator> =
-	T extends PermutationGenerator<infer U> ? U : never;
+export type Permutation2<T = unknown> = {
+	context?: unknown;
+	schema: unknown;
+	size: number;
+	type: string;
+	passive: boolean;
+} & Iterable<T>;
+
+export type PermutationGenerator2<T extends Permutation2 = Permutation2> = <
+	const C extends PermutationContext,
+>(
+	context?: C,
+) => T;
+export type GeneratorReturnType<T extends PermutationGenerator2> =
+	T extends PermutationGenerator2<infer U>
+		? U extends Permutation2<infer K>
+			? K
+			: never
+		: never;
 type FixedSymbolCheck<T> = Extract<T, typeof REMOVE> extends never ? unknown : typeof REMOVE;
 type OptionalKeys<T extends object> = {
 	[K in keyof T]: FixedSymbolCheck<T[K]> extends typeof REMOVE ? K : never;
@@ -21,9 +36,9 @@ type AddQuestionMark<
 		[K in Exclude<keyof T, O>]: T[K];
 	}
 >;
-export type ObjectGenerator<T extends Record<string, PermutationGenerator>> = AddQuestionMark<{
+export type ObjectGenerator<T extends Record<string, PermutationGenerator2>> = AddQuestionMark<{
 	[K in keyof T]: GeneratorReturnType<T[K]>;
 }>;
-export type TupleRemap<T extends PermutationGenerator[]> = {
+export type TupleRemap<T extends PermutationGenerator2[]> = {
 	[K in keyof T]: GeneratorReturnType<T[K]>;
 };
