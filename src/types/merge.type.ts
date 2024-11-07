@@ -34,3 +34,10 @@ export type SquashObjectUnion<
 } extends infer K
 	? K
 	: never;
+
+export type HardMergeTuple<T extends Record<string, unknown>[]> = T extends [
+	infer U,
+	...infer P extends Record<string, unknown>[],
+]
+	? HardMerge<U, HardMergeTuple<P>>
+	: unknown;
