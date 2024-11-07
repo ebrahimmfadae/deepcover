@@ -59,7 +59,7 @@ export default [
 			'@typescript-eslint/no-redundant-type-constituents': 'error',
 			'@typescript-eslint/restrict-plus-operands': 'error',
 			'@typescript-eslint/array-type': 'error',
-			'@typescript-eslint/no-array-delete': 'error',
+			'@typescript-eslint/no-array-delete': 'off',
 			'import/no-extraneous-dependencies': 'error',
 			'import/no-unresolved': 'off',
 		},

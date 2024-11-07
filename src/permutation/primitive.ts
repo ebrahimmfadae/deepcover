@@ -99,23 +99,6 @@ export function enums<const T extends unknown[]>(enums: T) {
 	} satisfies PermutationGenerator2;
 }
 
-export function defer<const T extends Permutation2>(input: PermutationGenerator2<T>) {
-	return function <const C extends PermutationContext>(context?: C) {
-		const r = input(context);
-		return {
-			...(context !== undefined && { context }),
-			schema: convertToSchema(r),
-			size: 1,
-			type: 'defer',
-			allRoutes: [{ routes: NO_ROUTE, size: 1 }],
-			passive: false,
-			*[Symbol.iterator]() {
-				yield r;
-			},
-		} as const;
-	} satisfies PermutationGenerator2;
-}
-
 export function optional<const T extends Permutation2>(input: PermutationGenerator2<T>) {
 	return function <const C extends PermutationContext>(context?: C) {
 		const r = input(context);

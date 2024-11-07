@@ -1,3 +1,4 @@
+import { REMOVE } from '#src/permutation/symbols';
 import type { Permutation2 } from '#src/types/permutation.type';
 
 export function isPOJO(obj: unknown): obj is Record<string, unknown> {
@@ -31,8 +32,27 @@ export function deepMerge<T, S>(target: T, source: S) {
 	return source;
 }
 
-export function cleanRemoveValues<const T>(input: T): T {
-	return JSON.parse(JSON.stringify(input));
+export function cleanRemoveValues<const T>(input: T) {
+	if (!isPOJO(input) && !typeSafeIsArray(input)) return input === REMOVE ? undefined : input;
+	if (typeSafeIsArray(input)) {
+		const c = [...input];
+		c.forEach((v, i) => {
+			if (v === REMOVE) delete c[i];
+			else if (isPOJO(c[i]) || Array.isArray(c[i])) c[i] = cleanRemoveValues(c[i]);
+		});
+		return c;
+	} else if (isPOJO(input)) {
+		const c: Record<string, unknown> = { ...input };
+		for (const key in c) {
+			if (Object.prototype.hasOwnProperty.call(c, key)) {
+				if (c[key] === REMOVE) delete c[key];
+				else if (isPOJO(c[key]) || Array.isArray(c[key]))
+					c[key] = cleanRemoveValues(c[key]);
+			}
+		}
+		return c;
+	}
+	return input;
 }
 
 export function idempotentFreeze<const T>(value: T) {
@@ -47,7 +67,7 @@ export function convertToSchema<const T extends Permutation2>(permutation: T) {
 		schema: schema.schema,
 		size: schema.size,
 		passive: schema.passive as T['passive'],
-	} satisfies Omit<Permutation2, typeof Symbol.iterator>;
+	} satisfies Omit<Permutation2, typeof Symbol.iterator | 'allRoutes'>;
 }
 
 export function getPassiveSchemas(
