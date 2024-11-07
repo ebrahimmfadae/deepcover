@@ -1,4 +1,4 @@
-import type { REMOVE } from '#src/permutation/symbols';
+import type { NO_ROUTE, REMOVE } from '#src/permutation/symbols';
 import type { MergeIntersection } from '#src/types/merge.type';
 
 export type PermutationContext<T extends readonly string[] = readonly string[]> = {
@@ -10,6 +10,13 @@ export type Permutation2<T = unknown> = {
 	schema: unknown;
 	size: number;
 	type: string;
+	allRoutes: readonly { routes: readonly string[] | typeof NO_ROUTE; size: number }[];
+	// It is something like one-to-one functions in math. It means we can undo an attribute. Example: undo an optional
+	//	Maybe we should rename it!
+	// Properties of passive permutations:
+	//		Order of appliance is not important
+	//		They can be reversed
+	//		They are idempotent (Not sure about this one)
 	passive: boolean;
 } & Iterable<T>;
 

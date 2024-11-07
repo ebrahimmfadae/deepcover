@@ -1,4 +1,4 @@
-import { CACHED, REMOVE } from '#src/export';
+import { CACHED, REMOVE } from '#src/permutation/symbols';
 import { isPOJO } from '#src/utils/utils';
 
 type BuildTuple<T, S, U extends unknown[] = []> = number extends S
@@ -153,7 +153,7 @@ export function* parallelPermutations<
 
 export function* combinations<
 	const T extends Record<string, Iterable<unknown>> | Iterable<unknown>[],
->(input: T): Generator<Readonly<Partial<T>>> {
+>(input: T): Generator<Readonly<{ [K in keyof T]: T[K] | typeof REMOVE }>> {
 	const entries = Object.entries(input);
 	const slots = entries.map(([k, v]) => [
 		[[k], cachedIterable(v)],
@@ -163,6 +163,9 @@ export function* combinations<
 	for (const element of explicitPermutations(slots)) {
 		const result = explicitPermutations(element.map((v) => explicitPermutations(v)));
 		if (shouldConvertToObject) yield* result.map((v) => Object.fromEntries(v));
-		else yield* result.map((v) => v.map((u) => u[1])) as Iterable<Readonly<Partial<T>>>;
+		else
+			yield* result.map((v) => v.map((u) => u[1])) as Iterable<
+				Readonly<{ [K in keyof T]: T[K] | typeof REMOVE }>
+			>;
 	}
 }
