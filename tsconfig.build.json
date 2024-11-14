@@ -1,7 +1,9 @@
 {
 	"extends": "./tsconfig.json",
 	"compilerOptions": {
-		"declaration": true,
+		"outDir": "dist",
+		"rootDir": "src",
+		"declarationMap": false,
 		"sourceMap": false,
 		"incremental": false,
 		"types": [] // Excludes global type declarations like vitest and jest
