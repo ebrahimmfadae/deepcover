@@ -79,7 +79,9 @@ export function deepEntries<const T extends Record<string, unknown> | readonly u
 			});
 }
 
-export function squashKeys<const T extends readonly (string | number | readonly [number])[]>(keys: T) {
+export function squashKeys<const T extends readonly (string | number | readonly [number])[]>(
+	keys: T,
+) {
 	return keys.reduce(
 		(acc, curr) => `${acc}${Array.isArray(curr) ? `[${curr}]` : `${acc ? '.' : ''}${curr}`}`,
 		'',
