@@ -19,7 +19,7 @@ describe('Test Compare', () => {
 		const result = compare({ names: ['bruce'] }, { names: ['bruce'] });
 		expect(result).toStrictEqual([
 			{
-				key: 'names.0',
+				key: 'names[0]',
 				state: 'unchanged',
 				value: 'bruce',
 			},
@@ -128,7 +128,7 @@ describe('Test Compare', () => {
 		const result = compare({ names: ['bruce'] }, { names: ['henry'] });
 		expect(result).toStrictEqual([
 			{
-				key: 'names.0',
+				key: 'names[0]',
 				state: 'changed',
 				value: 'bruce',
 				changedTo: 'henry',
@@ -142,7 +142,7 @@ describe('Test Compare', () => {
 		);
 		expect(result).toStrictEqual([
 			{
-				key: 'names.0.firstName',
+				key: 'names[0].firstName',
 				state: 'changed',
 				value: 'bruce',
 				changedTo: 'henry',
@@ -153,7 +153,7 @@ describe('Test Compare', () => {
 		const result = compare({ names: ['bruce'] }, { names: [] });
 		expect(result).toStrictEqual([
 			{
-				key: 'names.0',
+				key: 'names[0]',
 				state: 'deleted',
 				value: 'bruce',
 			},
@@ -163,13 +163,13 @@ describe('Test Compare', () => {
 		const result = compare({ names: ['bruce'] }, { names: ['henry', 'alfred'] });
 		expect(result).toStrictEqual([
 			{
-				key: 'names.0',
+				key: 'names[0]',
 				state: 'changed',
 				value: 'bruce',
 				changedTo: 'henry',
 			},
 			{
-				key: 'names.1',
+				key: 'names[1]',
 				state: 'created',
 				value: 'alfred',
 			},

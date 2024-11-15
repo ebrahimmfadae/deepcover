@@ -1,5 +1,5 @@
 import type { MutableFlatKeys } from '#src/utils/entries';
-import { isPOJO } from '#src/utils/utils';
+import { isPOJO, typeSafeIsArray } from '#src/utils/utils';
 
 export type CompareResult<T> = {
 	key: T;
@@ -64,13 +64,41 @@ export function compare<T, U>(
 			}
 		});
 		return changes;
-	}
-	if (Array.isArray(a) && Array.isArray(b)) {
+	} else if (typeSafeIsArray(a) && typeSafeIsArray(b)) {
 		for (let i = 0; i < Math.max(a.length, b.length); i++) {
-			const fullKey = `${prefix}.${i}`;
-			changes.push(
-				...(compare(a[i], b[i], fullKey) as Iterable<CompareResult<MutableFlatKeys<T | U>>>),
-			);
+			const fullKey = (prefix ? `${prefix}[${i}]` : i) as MutableFlatKeys<T | U>;
+			if ((isPOJO(a[i]) && isPOJO(b[i])) || (Array.isArray(a[i]) && Array.isArray(b[i]))) {
+				changes.push(
+					...(compare(a[i], b[i], fullKey) as Iterable<
+						CompareResult<MutableFlatKeys<T | U>>
+					>),
+				);
+			} else if (i in a && !(i in b)) {
+				changes.push({
+					key: fullKey,
+					state: `deleted`,
+					value: a[i],
+				});
+			} else if (!(i in a) && i in b) {
+				changes.push({
+					key: fullKey,
+					state: `created`,
+					value: b[i],
+				});
+			} else if (a[i] !== b[i]) {
+				changes.push({
+					key: fullKey,
+					state: `changed`,
+					value: a[i],
+					changedTo: b[i],
+				});
+			} else {
+				changes.push({
+					key: fullKey,
+					state: `unchanged`,
+					value: a[i],
+				});
+			}
 		}
 		return changes;
 	}
