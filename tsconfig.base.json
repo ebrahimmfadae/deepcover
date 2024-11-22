@@ -2,7 +2,7 @@
 	"compilerOptions": {
 		"strict": true,
 		"isolatedModules": true,
-		"isolatedDeclarations": false,
+		"isolatedDeclarations": true,
 		"verbatimModuleSyntax": true,
 		"exactOptionalPropertyTypes": true,
 		"noUncheckedIndexedAccess": true,
@@ -23,8 +23,8 @@
 		"noImplicitAny": true,
 		"forceConsistentCasingInFileNames": true,
 		"noFallthroughCasesInSwitch": true,
-		"types": ["vitest/globals"],
 		"useDefineForClassFields": true,
 		"noErrorTruncation": true,
+		"types": ["vitest/globals"]
 	}
 }
