@@ -1,9 +1,11 @@
 export type TupleToUnion<T extends readonly unknown[]> = T[number];
 export type PlainType<T> = T extends infer P ? P : never;
 export type PartialRecord<K extends PropertyKey, T> = Partial<Record<K, T>>;
-export type ExpandableArray<T> = T extends readonly unknown[] ? true : false;
-export type ExpandableObject<T> = T extends Record<string | number, unknown> ? true : false;
-export type Expandable<T> = ExpandableArray<T> extends true ? true : ExpandableObject<T>;
+export type IsExpandableArray<T> = T extends readonly unknown[] ? true : false;
+export type IsExpandableObject<T> = T extends Record<string, unknown> ? true : false;
+export type Expandable = Record<string, unknown> | readonly unknown[];
+export type IsExpandable<T> = T extends Expandable ? true : false;
+export type AsExpandable<T> = T extends Expandable ? T : never;
 export type Primitive = string | number | bigint | boolean | null | undefined;
 export type ToPrimitive<T> = T extends number
 	? number
@@ -18,5 +20,7 @@ export type ToPrimitive<T> = T extends number
 					: T extends undefined
 						? undefined
 						: never;
-export type Length<T extends readonly unknown[]> = T extends { length: infer L } ? L : never;
-export type CastAsNumericArray<T> = T extends number[] ? T : never;
+export type Length<T extends readonly unknown[]> = T extends { length: infer L extends number }
+	? L
+	: never;
+export type CastAsNumericArray<T> = T extends readonly number[] ? T : never;

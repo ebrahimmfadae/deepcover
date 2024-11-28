@@ -88,9 +88,9 @@ export type Multiply<A extends string | number | bigint, B extends string | numb
 	? n
 	: never;
 
-export type MultiplyTuple<T extends number[], N extends number = 1> = T extends [
+export type MultiplyTuple<T extends readonly number[], N extends number = 1> = T extends readonly [
 	infer Head extends number,
-	...infer U extends number[],
+	...infer U extends readonly number[],
 ]
 	? MultiplyTuple<U, Multiply<Head, N>>
 	: N;
