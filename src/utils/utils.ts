@@ -1,14 +1,34 @@
 import { REMOVE } from '#src/permutation/symbols';
-import type { Permutation2 } from '#src/types/permutation.type';
+import type { Expandable, IsExpandableArray, IsExpandableObject } from '#src/types/common.type';
+import type { Permutation2, PermutationContext } from '#src/types/permutation.type';
 
-export function isPOJO(obj: unknown): obj is Record<string, unknown> {
-	if (obj === null || typeof obj !== 'object') return false;
-	const prototype = Object.getPrototypeOf(obj);
+export function isPOJO(value: unknown): value is Record<string, unknown> {
+	if (value === null || typeof value !== 'object') return false;
+	const prototype = Object.getPrototypeOf(value);
 	return prototype === Object.prototype || prototype === null;
 }
 
-export function typeSafeIsArray<T>(arr: T): arr is Extract<T, readonly unknown[]> {
-	return Array.isArray(arr);
+export function typeSafeIsArray<T>(value: T): value is Extract<T, readonly unknown[]> {
+	return Array.isArray(value);
+}
+
+export function isExpandable<T>(value: T): value is Extract<T, Expandable> {
+	return isPOJO(value) || typeSafeIsArray(value);
+}
+
+export function isNotExpandable<T>(value: T): value is Exclude<T, Expandable> {
+	return !isExpandable(value);
+}
+
+export function expandableCheck<T>(value: T) {
+	const result = isExpandable(value) ? { isExpandable: true, value } : { isExpandable: false };
+	return result as T extends unknown
+		? IsExpandableObject<T> extends true
+			? { isExpandable: true; value: Extract<T, Record<string, unknown>> }
+			: IsExpandableArray<T> extends true
+				? { isExpandable: true; value: Extract<T, readonly unknown[]> }
+				: { isExpandable: false; value: T }
+		: never;
 }
 
 export function deepMerge<T, S>(target: T, source: S) {
@@ -55,7 +75,7 @@ export function cleanRemoveValues<const T>(input: T) {
 	return input;
 }
 
-export function idempotentFreeze<const T>(value: T) {
+export function idempotentFreeze<const T>(value: T): Readonly<T> {
 	return Object.isFrozen(value) ? value : Object.freeze(value);
 }
 
@@ -66,8 +86,21 @@ export function convertToSchema<const T extends Permutation2>(permutation: T) {
 		type: schema.type,
 		schema: schema.schema,
 		size: schema.size,
-		passive: schema.passive as T['passive'],
-	} satisfies Omit<Permutation2, typeof Symbol.iterator | 'allRoutes'>;
+		passive: schema.passive,
+	} as PermutationContext extends T['context']
+		? {
+				schema: T['schema'];
+				size: T['size'];
+				type: T['type'];
+				passive: T['passive'];
+			}
+		: {
+				context: T['context'];
+				schema: T['schema'];
+				size: T['size'];
+				type: T['type'];
+				passive: T['passive'];
+			};
 }
 
 export function getPassiveSchemas(

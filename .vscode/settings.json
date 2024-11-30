@@ -11,6 +11,7 @@
 	"typescript.tsdk": "node_modules/typescript/lib",
 	"typescript.preferences.autoImportSpecifierExcludeRegexes": [
 		"^console$",
-		"/export$"
+		"/export$",
+		"^node:console$"
 	]
 }
