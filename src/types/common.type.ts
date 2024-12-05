@@ -1,4 +1,13 @@
 export type TupleToUnion<T extends readonly unknown[]> = T[number];
+export type BuildTuple<T, S, U extends readonly unknown[] = readonly []> = (
+	number extends S
+		? readonly T[]
+		: U extends { length: S }
+			? U
+			: BuildTuple<T, S, readonly [...U, T]>
+) extends infer P extends readonly unknown[]
+	? P
+	: never;
 export type PlainType<T> = T extends infer P ? P : never;
 export type PartialRecord<K extends PropertyKey, T> = Partial<Record<K, T>>;
 export type IsExpandableArray<T> = T extends readonly unknown[] ? true : false;
