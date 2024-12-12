@@ -1,15 +1,22 @@
 import { cachedIterable } from '#src/permutation/pure/cached-iterable';
 import { explicitPermutations } from '#src/permutation/pure/explicit-permutations';
 import { REMOVE } from '#src/permutation/symbols';
+import type { Expandable } from '#src/types/common.type';
 import { isPOJO } from '#src/utils/utils';
 
-export type Combinations<
-	T extends Record<string, Iterable<unknown>> | readonly Iterable<unknown>[],
-> = { [K in keyof T]: T[K] | typeof REMOVE };
+export type ReadonlyExpandableOfIterables =
+	| Readonly<Record<string, Iterable<unknown>>>
+	| readonly Iterable<unknown>[];
 
-export function* combinations<
-	const T extends Record<string, Iterable<unknown>> | Iterable<unknown>[],
->(input: T): Generator<Combinations<T>, void, unknown> {
+export type Combinations<T extends ReadonlyExpandableOfIterables> = {
+	[K in keyof T]: (T[K] extends Iterable<infer P> ? P : never) | typeof REMOVE;
+} extends infer P extends Expandable
+	? P
+	: never;
+
+export function* combinations<const T extends ReadonlyExpandableOfIterables>(
+	input: T,
+): Generator<Combinations<T>, void, unknown> {
 	const entries = Object.entries(input);
 	const slots = entries.map(([k, v]) => [
 		[[k], cachedIterable(v)],

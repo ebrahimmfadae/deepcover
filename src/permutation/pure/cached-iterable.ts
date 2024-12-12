@@ -1,9 +1,9 @@
 import { CACHED } from '#src/permutation/symbols';
 
-export type CashedIterable<T> = Iterable<T> & { [CACHED]: CACHED };
+export type CachedIterable<T> = Iterable<T> & { [CACHED]: CACHED };
 
-export function cachedIterable<const T>(iterable: Iterable<T>): CashedIterable<T> {
-	if (CACHED in iterable) return iterable as CashedIterable<T>;
+export function cachedIterable<const T>(iterable: Iterable<T>): CachedIterable<T> {
+	if (CACHED in iterable) return iterable as CachedIterable<T>;
 	const cache: T[] = [];
 	const g = iterable[Symbol.iterator]();
 	return {
@@ -19,5 +19,5 @@ export function cachedIterable<const T>(iterable: Iterable<T>): CashedIterable<T
 				yield cache[i++]!;
 			}
 		},
-	} as CashedIterable<T>;
+	} as CachedIterable<T>;
 }

@@ -11,8 +11,8 @@ export type BuildTuple<T, S, U extends readonly unknown[] = readonly []> = (
 export type PlainType<T> = T extends infer P ? P : never;
 export type PartialRecord<K extends PropertyKey, T> = Partial<Record<K, T>>;
 export type IsExpandableArray<T> = T extends readonly unknown[] ? true : false;
-export type IsExpandableObject<T> = T extends Record<string, unknown> ? true : false;
-export type Expandable = Record<string, unknown> | readonly unknown[];
+export type IsExpandableObject<T> = T extends Readonly<Record<string, unknown>> ? true : false;
+export type Expandable = Readonly<Record<string, unknown>> | readonly unknown[];
 export type IsExpandable<T> = T extends Expandable ? true : false;
 export type AsExpandable<T> = T extends Expandable ? T : never;
 export type Primitive = string | number | bigint | boolean | null | undefined;
