@@ -1,5 +1,5 @@
-import type { MutableFlatKeys } from '#src/utils/entries';
-import { isPOJO, typeSafeIsArray } from '#src/utils/utils';
+import type { MutableFlatKeys } from '#src/utils/entries/keys';
+import { isPOJO, typeSafeIsArray } from '#src/utils/type-check';
 
 export type CompareResult<T> = {
 	key: T;

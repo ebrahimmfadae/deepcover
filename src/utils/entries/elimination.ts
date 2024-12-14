@@ -8,7 +8,7 @@ import {
 	type SquashKeys,
 	type SquashMappingOfAnObject,
 } from '#src/utils/entries/keys';
-import { isPOJO, typeSafeIsArray } from '#src/utils/utils';
+import { isPOJO, typeSafeIsArray } from '#src/utils/type-check';
 
 function deepSetValueInObject<
 	T extends Record<string, unknown> | unknown[],
@@ -21,7 +21,7 @@ function deepSetValueInObject<
 		if (typeSafeIsArray(input) && typeof k2 === 'number') {
 			if (k2 in input) input[k2] = value;
 		} else if (isPOJO(input) && typeof k2 === 'string') {
-			if (k2 in input) input[k2] = value;
+			if (k2 in input) (input as Record<string, unknown>)[k2] = value;
 		}
 	} else {
 		const [k, ...rest] = key;

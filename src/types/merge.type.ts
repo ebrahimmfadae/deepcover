@@ -7,7 +7,7 @@ export type HardMerge<Destination, Source> = {
 export type MergeIntersection<T extends object> = PlainType<{
 	[K in keyof T]: T[K];
 }>;
-type DeepMergeUnionByKeys<T extends object, U extends keyof T> = {
+export type DeepMergeUnionByKeys<T extends object, U extends keyof T> = {
 	[K in U]: [T[K]] extends [Record<string, unknown>] ? DeepMergeUnion<T[K]> : PickTypeOf<T, K>;
 };
 export type DeepMergeUnion<T> =
@@ -16,7 +16,7 @@ export type DeepMergeUnion<T> =
 			DeepMergeUnionByKeys<Extract<T, object>, AllKeys<Extract<T, object>>> &
 				DeepMergeUnionByKeys<Extract<T, object>, NonCommonKeys<Extract<T, object>>>
 	  >;
-type MergeUnionByKeys<T extends object, U extends keyof T> = {
+export type MergeUnionByKeys<T extends object, U extends keyof T> = {
 	[K in U]: PickTypeOf<T, K>;
 };
 export type MergeUnion<T> =

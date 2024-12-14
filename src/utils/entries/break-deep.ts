@@ -12,7 +12,8 @@ import type {
 	EntryKey,
 } from '#src/utils/entries/common';
 import { squashKeys, type SquashKeys } from '#src/utils/entries/keys';
-import { idempotentFreeze, isPOJO } from '#src/utils/utils';
+import { isPOJO } from '#src/utils/type-check';
+import { idempotentFreeze } from '#src/utils/utils';
 
 export type DeepEntries<T, P extends readonly EntryKey[] = readonly []> = T extends unknown
 	? IsExpandable<T> extends true

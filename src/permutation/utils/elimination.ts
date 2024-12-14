@@ -5,7 +5,7 @@ import {
 	type EliminateKeysFromExpandable,
 	deepEliminateKeys,
 } from '#src/utils/entries/elimination';
-import { isPOJO } from '#src/utils/utils';
+import { isPOJO } from '#src/utils/type-check';
 
 export type CoalesceString<T, U extends string> = T extends string ? T : U;
 export type CoalesceRoutes<T extends readonly string[] | undefined> = CoalesceString<
