@@ -8,7 +8,7 @@ import {
 	type SquashKeys,
 	type SquashMappingOfAnObject,
 } from '#src/utils/entries/keys';
-import { isPOJO, typeSafeIsArray } from '#src/utils/type-check';
+import { isPOJO } from '#src/utils/type-check';
 
 function deepSetValueInObject<
 	T extends Record<string, unknown> | unknown[],
@@ -17,20 +17,20 @@ function deepSetValueInObject<
 >(input: T, key: U, value: P) {
 	if (key.length === 1) {
 		const k = key[0]!;
-		const k2 = typeSafeIsArray(k) ? k[0] : k;
-		if (typeSafeIsArray(input) && typeof k2 === 'number') {
+		const k2 = Array.isArray(k) ? k[0] : k;
+		if (Array.isArray(input) && typeof k2 === 'number') {
 			if (k2 in input) input[k2] = value;
 		} else if (isPOJO(input) && typeof k2 === 'string') {
 			if (k2 in input) (input as Record<string, unknown>)[k2] = value;
 		}
 	} else {
 		const [k, ...rest] = key;
-		const k2 = typeSafeIsArray(k) ? k[0] : k;
-		if (typeSafeIsArray(input) && typeof k2 === 'number') {
-			if (!isPOJO(input[k2]) && !typeSafeIsArray(input[k2])) return;
+		const k2 = Array.isArray(k) ? k[0] : k;
+		if (Array.isArray(input) && typeof k2 === 'number') {
+			if (!isPOJO(input[k2]) && !Array.isArray(input[k2])) return;
 			else deepSetValueInObject(input[k2], rest, value);
 		} else if (isPOJO(input) && typeof k2 === 'string') {
-			if (!isPOJO(input[k2]) && !typeSafeIsArray(input[k2])) return;
+			if (!isPOJO(input[k2]) && !Array.isArray(input[k2])) return;
 			else deepSetValueInObject(input[k2], rest, value);
 		}
 	}

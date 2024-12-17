@@ -1,5 +1,5 @@
 import type { MutableFlatKeys } from '#src/utils/entries/keys';
-import { isPOJO, typeSafeIsArray } from '#src/utils/type-check';
+import { isPOJO } from '#src/utils/type-check';
 
 export type CompareResult<T> = {
 	key: T;
@@ -64,7 +64,7 @@ export function compare<T, U>(
 			}
 		});
 		return changes;
-	} else if (typeSafeIsArray(a) && typeSafeIsArray(b)) {
+	} else if (Array.isArray(a) && Array.isArray(b)) {
 		for (let i = 0; i < Math.max(a.length, b.length); i++) {
 			const fullKey = (prefix ? `${prefix}[${i}]` : i) as MutableFlatKeys<T | U>;
 			if ((isPOJO(a[i]) && isPOJO(b[i])) || (Array.isArray(a[i]) && Array.isArray(b[i]))) {
