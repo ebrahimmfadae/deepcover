@@ -13,7 +13,7 @@ import type {
 } from '#src/utils/entries/common';
 import { squashKeys, type SquashKeys } from '#src/utils/entries/keys';
 import { isPOJO } from '#src/utils/type-check';
-import { idempotentFreeze } from '#src/utils/utils';
+import { freezeOnce } from '#src/utils/utils';
 
 export type DeepEntries<T, P extends readonly EntryKey[] = readonly []> = T extends unknown
 	? IsExpandable<T> extends true
@@ -67,7 +67,7 @@ export function deepEntries<const T extends Expandable>(
 export function squashedDeepEntries<const T extends Expandable>(
 	o: T,
 ): readonly SquashedKeysOfDeepEntries<DeepEntries<T>>[] {
-	return idempotentFreeze(
+	return freezeOnce(
 		deepEntries(o).map(([k, v]) => [squashKeys(k), v] as const),
 	) as readonly SquashedKeysOfDeepEntries<DeepEntries<T>>[];
 }

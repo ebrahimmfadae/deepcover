@@ -1,9 +1,9 @@
-import { idempotentFreeze } from '#src/utils/utils';
+import { freezeOnce } from '#src/utils/utils';
 
-describe('idempotentFreeze', () => {
+describe('freezeOnce', () => {
 	it('1', () => {
 		const input0 = { a: 1, b: 2 } as { a: 1; b: 2 };
-		const output = idempotentFreeze(input0);
+		const output = freezeOnce(input0);
 		type A = {
 			readonly a: 1;
 			readonly b: 2;
