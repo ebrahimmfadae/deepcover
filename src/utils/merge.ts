@@ -1,5 +1,12 @@
 import { isPOJO } from '#src/utils/type-check';
 
+/**
+ * Note: Unmatched types will override by source
+ *
+ * @param target
+ * @param source
+ * @returns
+ */
 export function deepMerge<const T, const S>(target: T, source: S): T | S {
 	if (typeof target !== typeof source) return source;
 	if (isPOJO(target) && isPOJO(source)) {
