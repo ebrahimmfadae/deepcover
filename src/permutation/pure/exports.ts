@@ -1,4 +1,3 @@
-export * from '#src/permutation/primitive/optional';
 export * from '#src/permutation/pure/cached-iterable';
 export * from '#src/permutation/pure/combinations';
 export * from '#src/permutation/pure/explicit-permutations';
