@@ -27,4 +27,3 @@ export type ToPrimitive<T> = T extends number
 export type Length<T extends readonly unknown[]> = T extends { length: infer L extends number }
 	? L
 	: never;
-export type CastAsNumericArray<T> = T extends readonly number[] ? T : never;
