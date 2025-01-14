@@ -1,15 +1,13 @@
 {
   "name": "deepcover",
-  "version": "0.1.0-rc.7",
+  "version": "0.1.0-rc.8",
   "description": "",
   "type": "module",
   "imports": {
     "#src/*": "./dist/*.js"
   },
   "exports": {
-    ".": "./dist/export.js",
-    "./utils": "./dist/utils/export.js",
-    "./utils/*": "./dist/utils/*/export.js"
+    ".": "./dist/export.js"
   },
   "scripts": {
     "start": "node --import @swc-node/register/esm-register",
