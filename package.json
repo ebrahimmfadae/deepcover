@@ -1,14 +1,14 @@
 {
   "name": "deepcover",
-  "version": "0.1.0-rc.10",
+  "version": "0.1.0-rc.11",
   "description": "",
   "type": "module",
   "imports": {
     "#src/*": "./dist/*.js"
   },
   "exports": {
-    "./permutations/pure": "./dist/permutation/pure/exports.js",
-    "./permutations/primitive": "./dist/permutation/primitive/exports.js"
+    ".": "./dist/permutation/primitive/exports.js",
+    "./permutations/pure": "./dist/permutation/pure/exports.js"
   },
   "scripts": {
     "start": "node --import @swc-node/register/esm-register",
