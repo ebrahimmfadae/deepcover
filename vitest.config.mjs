@@ -13,13 +13,16 @@ export default defineConfig({
 		logHeapUsage: true,
 		open: false,
 		include: ['**/*.{test,spec,bench}.?(c|m)[jt]s?(x)'],
-		typecheck: true,
+		typecheck: {
+			enabled: true,
+			include: ['**/*.{test-d,spec-d}.?(c|m)[jt]s?(x)'],
+		},
 		reporters: 'verbose',
 	},
 	resolve: {
 		alias: {
-			src: new URL('./src/', import.meta.url).pathname,
-			test: new URL('./test/', import.meta.url).pathname,
+			'#src': new URL('./src/', import.meta.url).pathname,
+			'#test': new URL('./test/', import.meta.url).pathname,
 		},
 	},
 	plugins: [swc.vite()],

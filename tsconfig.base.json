@@ -1,0 +1,30 @@
+{
+	"compilerOptions": {
+		"strict": true,
+		"isolatedModules": true,
+		"isolatedDeclarations": true,
+		"verbatimModuleSyntax": true,
+		"exactOptionalPropertyTypes": true,
+		"noUncheckedIndexedAccess": true,
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
+		"declaration": true,
+		"declarationMap": true,
+		"removeComments": false,
+		"resolveJsonModule": true,
+		"emitDecoratorMetadata": true,
+		"experimentalDecorators": true,
+		"allowSyntheticDefaultImports": true,
+		"target": "ESNext",
+		"sourceMap": true,
+		"incremental": true,
+		"skipLibCheck": true,
+		"skipDefaultLibCheck": true,
+		"noImplicitAny": true,
+		"forceConsistentCasingInFileNames": true,
+		"noFallthroughCasesInSwitch": true,
+		"useDefineForClassFields": true,
+		"noErrorTruncation": true,
+		"types": ["vitest/globals"]
+	}
+}

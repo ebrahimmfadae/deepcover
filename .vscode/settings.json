@@ -8,5 +8,10 @@
 		"typecheck",
 		"unplugin"
 	],
-	"typescript.tsdk": "node_modules/typescript/lib"
+	"typescript.tsdk": "node_modules/typescript/lib",
+	"typescript.preferences.autoImportSpecifierExcludeRegexes": [
+		"^console$",
+		"/export$",
+		"^node:console$"
+	]
 }
