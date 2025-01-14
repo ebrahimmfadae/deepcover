@@ -4,7 +4,7 @@ import type {
 	UnwrapPermutation,
 } from '#src/permutation/definitions';
 import { REMOVE } from '#src/permutation/symbols';
-import type { Sum } from '#src/utils/arithmetic/sum.type';
+import type { Sum } from '#src/utils/arithmetic/sum';
 
 export function optional<const T extends Permutation>(input: PermutationGenerator<T>) {
 	return function () {

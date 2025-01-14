@@ -1,4 +1,4 @@
-import type { Subtract } from '#src/types/arithmetic/subtract.type';
+import type { Subtract } from '#src/utils/arithmetic/subtract';
 
 export type Eq<T extends number, U extends number> = T extends U
 	? U extends T

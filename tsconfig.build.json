@@ -9,5 +9,5 @@
 		"types": [] // Excludes global type declarations like vitest and jest
 	},
 	"include": ["src"],
-	"exclude": ["**/node_modules", "**/*.spec.ts"]
+	"exclude": ["**/node_modules", "**/*.spec.ts", "**/*.spec-d.ts"]
 }
