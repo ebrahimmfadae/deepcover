@@ -1,3 +1,6 @@
+import type { Expandable } from '#src/utils/expandable-check';
+import type { UnionToTuple } from '#src/utils/union-utils';
+
 export type TupleToUnion<T extends readonly unknown[]> = T[number];
 export type BuildTuple<T, S, U extends readonly unknown[] = readonly []> = (
 	number extends S
@@ -8,6 +11,16 @@ export type BuildTuple<T, S, U extends readonly unknown[] = readonly []> = (
 ) extends infer P extends readonly unknown[]
 	? P
 	: never;
+export type SplitEntries<T extends Expandable, K extends keyof T = keyof T> =
+	UnionToTuple<K extends unknown ? [T[K]] : never> extends infer U extends readonly (readonly [
+		unknown,
+	])[]
+		? U
+		: never;
+export type UnwrapSplitEntries<T extends readonly (readonly [unknown])[]> = {
+	[K in keyof T]: T[K][0];
+};
+export type EntryValuesAsTuple<T extends Expandable> = UnwrapSplitEntries<SplitEntries<T>>;
 export type PlainType<T> = T extends infer P ? P : never;
 export type PartialRecord<K extends PropertyKey, T> = Partial<Record<K, T>>;
 export type Primitive = string | number | bigint | boolean | null | undefined;
