@@ -6,14 +6,14 @@ export function each<const T extends readonly unknown[]>(...values: T) {
 		return {
 			size: values.length as Length<T>,
 			type: 'each',
+			modifiers: [],
 			*[Symbol.iterator]() {
 				yield* values;
 			},
 		};
 	} as PermutationGenerator<
-		{
-			readonly size: Length<T>;
-			readonly type: 'each';
-		} & Iterable<TupleToUnion<T>>
+		{ readonly size: Length<T>; readonly type: 'each'; readonly modifiers: [] } & Iterable<
+			TupleToUnion<T>
+		>
 	>;
 }
