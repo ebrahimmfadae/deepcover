@@ -1,20 +1,12 @@
 {
   "name": "deepcover",
-  "version": "0.1.0-rc.13",
+  "version": "0.0.0",
   "description": "",
   "type": "module",
-  "imports": {
-    "#src/*": "./dist/*.js"
-  },
-  "exports": {
-    ".": "./dist/permutation/primitive/exports.js",
-    "./pure": "./dist/permutation/pure/exports.js"
-  },
+  "private": true,
   "scripts": {
     "start": "node --import @swc-node/register/esm-register",
     "test": "vitest --watch",
-    "typecheck": "tsc --noEmit --incremental false",
-    "build": "tsc -p tsconfig.build.json",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "eslint:inspect": "npx @eslint/config-inspector"
   },
@@ -35,7 +27,7 @@
     "unplugin-swc": "^1.5.1",
     "vitest": "^3.1.1"
   },
-  "files": [
-    "dist"
+  "workspaces": [
+    "packages/*"
   ]
 }

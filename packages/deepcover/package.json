@@ -1,0 +1,22 @@
+{
+  "name": "@deepcover/core",
+  "version": "0.1.0-rc.13",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit --incremental false"
+  },
+  "imports": {
+    "#src/*": "./dist/*.js"
+  },
+  "exports": {
+    ".": "./dist/permutation/exports.js",
+    "./pure": "./dist/permutation/pure/exports.js"
+  },
+  "author": "ebrahimmfadae@gmail.com",
+  "license": "MIT",
+  "files": [
+    "dist"
+  ]
+}

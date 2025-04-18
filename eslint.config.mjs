@@ -13,26 +13,20 @@ export default [
 	{ name: 'eslint/recommended', ...js.configs.recommended },
 	...tseslint.configs.recommended,
 	pluginImport.flatConfigs.recommended,
-	{
-		name: 'prettier/recommended',
-		...eslintPluginPrettierRecommended,
-	},
+	{ name: 'prettier/recommended', ...eslintPluginPrettierRecommended },
 	{ name: 'custom/files', ignores: ['**/dist'] },
 	{
 		name: 'custom/misc',
-		plugins: {
-			'@typescript-eslint': tseslint.plugin,
-		},
+		plugins: { '@typescript-eslint': tseslint.plugin },
 		languageOptions: {
-			globals: {
-				...globals.node,
-			},
+			globals: { ...globals.node },
 			parser: tseslint.parser,
 			ecmaVersion: 5,
 			sourceType: 'module',
 			parserOptions: {
 				project: 'tsconfig.json',
 				tsconfigRootDir: __dirname,
+				projectService: true,
 			},
 		},
 		rules: {
