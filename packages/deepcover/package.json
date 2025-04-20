@@ -12,7 +12,8 @@
   },
   "exports": {
     ".": "./dist/permutation/exports.js",
-    "./pure": "./dist/permutation/pure/exports.js"
+    "./pure": "./dist/permutation/pure/exports.js",
+    "./utils": "./dist/utils/exports.js"
   },
   "author": "ebrahimmfadae@gmail.com",
   "license": "MIT",

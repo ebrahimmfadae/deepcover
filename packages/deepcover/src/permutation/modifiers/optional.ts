@@ -10,7 +10,7 @@ export function optional<const T extends Permutation>(input: PermutationGenerato
 		if (r.modifiers.includes('optional')) return r;
 		return { ...r, modifiers: ['optional', ...r.modifiers] };
 	} as PermutationGenerator<
-		'optional' extends keyof T['modifiers']
+		'optional' extends T['modifiers'][number]
 			? T
 			: Iterable<UnwrapPermutation<T>> & {
 					readonly size: T['size'];
