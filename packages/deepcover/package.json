@@ -7,6 +7,9 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit --incremental false"
   },
+  "dependencies": {
+    "type-fest": "^4.40.0"
+  },
   "imports": {
     "#src/*": "./dist/*.js"
   },

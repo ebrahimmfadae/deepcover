@@ -1,6 +1,11 @@
 {
 	"extends": "./tsconfig.base.json",
 	"compilerOptions": {
-		"baseUrl": "."
-	}
+		"paths": {
+			"@deepcover/core": ["./packages/deepcover/src/permutation/exports"],
+			"@deepcover/pure": ["./packages/deepcover/src/permutation/pure/exports"],
+			"@deepcover/utils": ["./packages/deepcover/src/utils/exports"]
+		}
+	},
+	"references": [{ "path": "./packages/deepcover" }]
 }
