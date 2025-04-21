@@ -164,9 +164,8 @@ export type Sum<left extends string | number | bigint, right extends string | nu
 		? n
 		: never;
 
-export type SumTuple<T extends readonly number[], N extends number = 0> = T extends readonly [
-	infer Head extends number,
-	...infer U extends readonly number[],
-]
-	? SumTuple<U, Sum<Head, N>>
-	: N;
+export type SumTuple<T extends readonly number[], N extends number = 0> = readonly [] extends T
+	? 0
+	: T extends readonly [infer Head extends number, ...infer U extends readonly number[]]
+		? SumTuple<U, Sum<Head, N>>
+		: N;

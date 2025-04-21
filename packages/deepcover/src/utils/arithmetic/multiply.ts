@@ -55,11 +55,11 @@ type Plus<
 	? B extends [...infer LB, infer RB]
 		? Plus<LA, LB, [PlusHelper<RA, RB, F>[1], ...R], PlusHelper<RA, RB, F>[0]>
 		: F extends true
-			? Plus<LA, [], [PlusHelper<RA, '1', false>[1], ...R], PlusHelper<RA, '1', false>[0]>
+			? Plus<LA, [], [PlusHelper<RA, '1'>[1], ...R], PlusHelper<RA, '1'>[0]>
 			: [...A, ...R]
 	: B extends [...infer LB, infer RB]
 		? F extends true
-			? Plus<[], LB, [PlusHelper<'1', RB, false>[1], ...R], PlusHelper<'1', RB, false>[0]>
+			? Plus<[], LB, [PlusHelper<'1', RB>[1], ...R], PlusHelper<'1', RB>[0]>
 			: [...B, ...R]
 		: F extends true
 			? ['1', ...R]
@@ -88,9 +88,8 @@ export type Multiply<A extends string | number | bigint, B extends string | numb
 	? n
 	: never;
 
-export type MultiplyTuple<T extends readonly number[], N extends number = 1> = T extends readonly [
-	infer Head extends number,
-	...infer U extends readonly number[],
-]
-	? MultiplyTuple<U, Multiply<Head, N>>
-	: N;
+export type MultiplyTuple<T extends readonly number[], N extends number = 1> = readonly [] extends T
+	? 1
+	: T extends readonly [infer Head extends number, ...infer U extends readonly number[]]
+		? MultiplyTuple<U, Multiply<Head, N>>
+		: N;

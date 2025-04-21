@@ -1,4 +1,4 @@
-import type { Expandable } from '#src/utils/expandable-check';
+import type { Expandable, ExpandableArray } from '#src/utils/expandable-check';
 import type { UnionToTuple } from '#src/utils/union-utils';
 
 export type TupleToUnion<T extends readonly unknown[]> = T[number];
@@ -20,7 +20,9 @@ export type SplitEntries<T extends Expandable, K extends keyof T = keyof T> =
 export type UnwrapSplitEntries<T extends readonly (readonly [unknown])[]> = {
 	[K in keyof T]: T[K][0];
 };
-export type EntryValuesAsTuple<T extends Expandable> = UnwrapSplitEntries<SplitEntries<T>>;
+export type EntryValuesAsTuple<T extends Expandable> = T extends ExpandableArray
+	? T
+	: UnwrapSplitEntries<SplitEntries<T>>;
 export type PlainType<T> = T extends infer P ? P : never;
 export type PartialRecord<K extends PropertyKey, T> = Partial<Record<K, T>>;
 export type Primitive = string | number | bigint | boolean | null | undefined;

@@ -7,11 +7,11 @@ import type {
 import { concat } from '#src/permutation/primitive/concat';
 import { explicitPermutations } from '#src/permutation/pure/explicit-permutations';
 import { REMOVE } from '#src/permutation/symbols';
-import type { MultiplyTuple } from '#src/utils/arithmetic/multiply';
 import type { Sum } from '#src/utils/arithmetic/sum';
 import type { CastAsNumericArray, CastAsPermutationGenerator } from '#src/utils/casting';
 import type { EntryValuesAsTuple } from '#src/utils/common';
 import { isExpandableArray } from '#src/utils/expandable-check';
+import type { MultiplyTuple } from '#src/utils/exports';
 import type { ArraySplice, SetOptional, UnionToTuple } from 'type-fest';
 
 type UnwrapValue<T> = UnwrapPermutation<UnwrapPermutationGenerator<CastAsPermutationGenerator<T>>>;
@@ -47,13 +47,17 @@ type UnionizeTuple<T extends readonly (readonly unknown[])[]> = T extends readon
  *
  * "I'm limited by the technology of my time." Howard Stark
  */
-type SetTupleOptional<T extends readonly unknown[], K extends number> = UnionizeTuple<
-	UnionToTuple<
-		K extends unknown ? Readonly<ArraySplice<T, K, 1, [T[K]?]>> : never
-	> extends infer U extends readonly (readonly unknown[])[]
-		? U
-		: never
->[0];
+type SetTupleOptional<T extends readonly unknown[], K extends number> = readonly [] extends T
+	? T
+	: [K] extends [never]
+		? T
+		: UnionizeTuple<
+				UnionToTuple<
+					K extends unknown ? Readonly<ArraySplice<T, K, 1, [T[K]?]>> : never
+				> extends infer U extends readonly (readonly unknown[])[]
+					? U
+					: never
+			>[0];
 
 export type ValidRecordInput =
 	| Readonly<Record<string, PermutationGenerator>>
@@ -73,7 +77,7 @@ export type UnwrapValidRecordInput<T extends ValidRecordInput> = {
 
 export type Parse<T extends string> = T extends `${infer U extends number}` ? U : never;
 
-export type RecordGenerator<T extends ValidRecordInput> = T extends readonly PermutationGenerator[]
+export type RecordGenerator<T extends ValidRecordInput> = T extends readonly unknown[]
 	? SetTupleOptional<
 			UnwrapValidRecordInput<T> extends infer U extends readonly unknown[] ? U : never,
 			GetOptionalKeys<T>[number] extends `${infer U extends number}` ? U : never
@@ -83,11 +87,13 @@ export type RecordGenerator<T extends ValidRecordInput> = T extends readonly Per
 		: never;
 
 export type SizeCalculator<T extends ValidRecordInput> = {
-	[K in keyof T]: 'optional' extends UnwrapPermutationGenerator<
-		CastAsPermutationGenerator<T[K]>
-	>['modifiers'][number]
-		? Sum<UnwrapPermutationGenerator<CastAsPermutationGenerator<T[K]>>['size'], 1>
-		: UnwrapPermutationGenerator<CastAsPermutationGenerator<T[K]>>['size'];
+	[K in keyof T]: [UnwrapValue<T[K]>] extends [never]
+		? 1
+		: 'optional' extends UnwrapPermutationGenerator<
+					CastAsPermutationGenerator<T[K]>
+			  >['modifiers'][number]
+			? Sum<UnwrapPermutationGenerator<CastAsPermutationGenerator<T[K]>>['size'], 1>
+			: UnwrapPermutationGenerator<CastAsPermutationGenerator<T[K]>>['size'];
 };
 
 export type SizeAccumulator<T extends ValidRecordInput> = MultiplyTuple<
