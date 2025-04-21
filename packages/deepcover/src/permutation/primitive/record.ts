@@ -109,7 +109,7 @@ export function record<const T extends ValidRecordInput>(input: T) {
 				: ([k, b] as const);
 			return ret as [string, Permutation];
 		});
-		const size = r.reduce((acc, curr) => acc * curr[1].size, 1);
+		const size = r.map((v) => v[1].size || 1).reduce((acc, curr) => acc * curr, 1);
 		return {
 			size: size as SizeAccumulator<T>,
 			type: 'record',
@@ -117,15 +117,16 @@ export function record<const T extends ValidRecordInput>(input: T) {
 			*[Symbol.iterator]() {
 				if (isExpandableArray(input)) {
 					yield* explicitPermutations(r.map((v) => v[1])).map((v) => {
-						v.forEach((u, i) => {
-							if (u === REMOVE) delete v[i];
+						const clone = [...v];
+						clone.forEach((u, i) => {
+							if (u === REMOVE) delete clone[i];
 						});
-						return v;
+						return clone;
 					});
 				} else {
 					const iterableInput = r.map((v) => Iterator.from(v[1]).map((u) => [v[0], u]));
 					yield* explicitPermutations(iterableInput)
-						.map((v) => v.filter((u) => u[1] !== REMOVE))
+						.map((v) => v.filter((u) => !!u).filter((u) => u[1] !== REMOVE))
 						.map((v) => Object.fromEntries(v));
 				}
 			},

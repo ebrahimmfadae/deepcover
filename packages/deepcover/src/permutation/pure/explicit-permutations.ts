@@ -7,29 +7,28 @@ export type ExplicitPermutations<T extends readonly Iterable<unknown>[]> = {
 export function* explicitPermutations<const T extends readonly Iterable<unknown>[]>(
 	input: T,
 ): Generator<ExplicitPermutations<T>, void, unknown> {
-	if (input.length === 0) return;
-	if (input.length === 1) {
-		const iterator = Iterator.from(input[0]!);
-		yield* iterator.map((v) => [v] as ExplicitPermutations<T>);
-	} else {
-		const r = input.map((v) => cachedIterable(v));
-		const generators = r.map((v) => Iterator.from(v));
-		const output = generators
-			.map((v) => v.next())
-			.filter((v) => !v.done)
-			.map((v) => v.value);
-		loop: while (true) {
-			yield output.map((v) => v) as ExplicitPermutations<T>;
-			for (let pivot = input.length - 1; pivot >= 0; pivot--) {
-				const { done, value } = generators[pivot]!.next();
-				if (!done) {
-					output[pivot] = value;
-					break;
-				}
-				if (pivot === 0) break loop;
-				generators[pivot] = Iterator.from(r[pivot]!);
-				output[pivot] = generators[pivot]!.next().value!;
-			}
+	if (input.length === 0) {
+		yield [] as ExplicitPermutations<T>;
+		return;
+	}
+	const cacheIfEffective = input.length === 1 ? input : input.map((v) => cachedIterable(v));
+	const iterables = cacheIfEffective.map((v) => Iterator.from(v));
+	const output = new Array(iterables.length);
+	for (let i = 0; i < iterables.length; i++) {
+		const { done, value } = iterables[i]!.next();
+		if (!done) output[i] = value;
+	}
+	yield output as ExplicitPermutations<T>;
+	for (let pivot = input.length - 1; pivot >= 0; pivot--) {
+		const { done, value } = iterables[pivot]!.next();
+		if (done) continue;
+		for (let i = pivot + 1; i < input.length; i++) {
+			iterables[i] = Iterator.from(cacheIfEffective[i]!);
+			const res = iterables[i]!.next();
+			if (!res.done) output[i] = res.value;
 		}
+		output[pivot] = value;
+		pivot = input.length;
+		yield [...output] as ExplicitPermutations<T>;
 	}
 }
