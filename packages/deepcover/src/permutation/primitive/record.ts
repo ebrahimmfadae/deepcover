@@ -4,6 +4,7 @@ import type {
 	UnwrapPermutation,
 	UnwrapPermutationGenerator,
 } from '#src/permutation/definitions';
+import { each } from '#src/permutation/exports';
 import { concat } from '#src/permutation/primitive/concat';
 import { explicitPermutations } from '#src/permutation/pure/explicit-permutations';
 import { REMOVE } from '#src/permutation/symbols';
@@ -12,7 +13,7 @@ import type { CastAsNumericArray, CastAsPermutationGenerator } from '#src/utils/
 import type { EntryValuesAsTuple } from '#src/utils/common';
 import { isExpandableArray } from '#src/utils/expandable-check';
 import type { MultiplyTuple } from '#src/utils/exports';
-import type { ArraySplice, SetOptional, UnionToTuple } from 'type-fest';
+import type { ArraySplice, LiteralUnion, Paths, SetOptional, UnionToTuple } from 'type-fest';
 
 type UnwrapValue<T> = UnwrapPermutation<UnwrapPermutationGenerator<CastAsPermutationGenerator<T>>>;
 type At<A, K extends PropertyKey> = A extends readonly unknown[]
@@ -77,7 +78,7 @@ export type UnwrapValidRecordInput<T extends ValidRecordInput> = {
 
 export type Parse<T extends string> = T extends `${infer U extends number}` ? U : never;
 
-export type RecordGenerator<T extends ValidRecordInput> = T extends readonly unknown[]
+export type RecordOutputMapper<T extends ValidRecordInput> = T extends readonly unknown[]
 	? SetTupleOptional<
 			UnwrapValidRecordInput<T> extends infer U extends readonly unknown[] ? U : never,
 			GetOptionalKeys<T>[number] extends `${infer U extends number}` ? U : never
@@ -100,20 +101,54 @@ export type SizeAccumulator<T extends ValidRecordInput> = MultiplyTuple<
 	CastAsNumericArray<EntryValuesAsTuple<SizeCalculator<T>>>
 >;
 
+export type StringifiedPaths<T extends ValidRecordInput> =
+	Paths<RecordOutputMapper<T>> extends infer U extends string ? U : never;
+
+export type RecordContext<T extends ValidRecordInput> = {
+	readonly removeKeys?: readonly LiteralUnion<StringifiedPaths<T>, string>[];
+};
+
+export type RecordGenerator<T extends ValidRecordInput> = {
+	<const C extends RecordContext<T>>(
+		context: C,
+	): {
+		readonly size: number;
+		readonly type: 'record';
+		readonly modifiers: [];
+		readonly context: C;
+	} & Iterable<RecordOutputMapper<T>>;
+	<const C extends RecordContext<T>>(
+		context?: C,
+	): {
+		readonly size: SizeAccumulator<T>;
+		readonly type: 'record';
+		readonly modifiers: [];
+	} & Iterable<RecordOutputMapper<T>>;
+} extends infer U extends PermutationGenerator
+	? U
+	: never;
+
 export function record<const T extends ValidRecordInput>(input: T) {
-	return function () {
-		const r = Object.entries(input).map(([k, v]) => {
-			const b = v();
-			const ret = b.modifiers.includes('optional')
-				? ([k, concat(v, REMOVE)()] as const)
-				: ([k, b] as const);
-			return ret as [string, Permutation];
+	return function (context) {
+		const safeContext = { removeKeys: [], ...context };
+		const { removeKeys } = safeContext;
+		const r = Object.entries(input).map(([k, v]): [string, Permutation] => {
+			if (removeKeys.includes(k)) return [k, each(REMOVE)()];
+			const prefix = `${k}.`;
+			const subContext = {
+				removeKeys: removeKeys
+					.filter((u) => u.startsWith(prefix))
+					.map((u) => u.replace(prefix, '')),
+			};
+			const b = v(subContext);
+			return b.modifiers.includes('optional') ? [k, concat(v, REMOVE)(subContext)] : [k, b];
 		});
 		const size = r.map((v) => v[1].size || 1).reduce((acc, curr) => acc * curr, 1);
 		return {
 			size: size as SizeAccumulator<T>,
 			type: 'record',
 			modifiers: [],
+			...(context ? { context } : undefined),
 			*[Symbol.iterator]() {
 				if (isExpandableArray(input)) {
 					yield* explicitPermutations(r.map((v) => v[1])).map((v) => {
@@ -131,11 +166,5 @@ export function record<const T extends ValidRecordInput>(input: T) {
 				}
 			},
 		};
-	} as PermutationGenerator<
-		{
-			readonly size: SizeAccumulator<T>;
-			readonly type: 'record';
-			readonly modifiers: [];
-		} & Iterable<RecordGenerator<T>>
-	>;
+	} as RecordGenerator<T>;
 }
