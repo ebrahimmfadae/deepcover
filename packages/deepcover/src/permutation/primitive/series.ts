@@ -114,20 +114,22 @@ export function series<const T extends readonly PermutationGenerator[]>(
 			},
 			extract(paths) {
 				const extractedValues = Object.entries(flatValues).map(([k, v]) => {
-					const filteredPaths = paths.filter((u) => u.startsWith(k));
+					const k2 = `#${k}`;
+					const filteredPaths = paths.filter((u) => u.startsWith(k2));
 					if (filteredPaths.length === 0) return each();
-					if (filteredPaths.length === 1 && filteredPaths.includes(k)) return v;
-					const shiftPaths = filteredPaths.map((u) => u.replace(`${k}.`, ''));
+					if (filteredPaths.length === 1 && filteredPaths.includes(k2)) return v;
+					const shiftPaths = filteredPaths.map((u) => u.replace(`${k2}.`, ''));
 					return v.extract(shiftPaths);
 				});
 				return series(...extractedValues);
 			},
 			exclude(paths) {
 				const extractedValues = Object.entries(flatValues).map(([k, v]) => {
-					const filteredPaths = paths.filter((u) => u.startsWith(k));
+					const k2 = `#${k}`;
+					const filteredPaths = paths.filter((u) => u.startsWith(k2));
 					if (filteredPaths.length === 0) return v;
-					if (filteredPaths.includes(k)) return each();
-					const shiftPaths = filteredPaths.map((u) => u.replace(`${k}.`, ''));
+					if (filteredPaths.includes(k2)) return each();
+					const shiftPaths = filteredPaths.map((u) => u.replace(`${k2}.`, ''));
 					return v.extract(shiftPaths);
 				});
 				return series(...extractedValues);
