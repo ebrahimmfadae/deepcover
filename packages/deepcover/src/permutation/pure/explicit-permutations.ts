@@ -29,6 +29,8 @@ export function* explicitPermutations<const T extends readonly Iterable<unknown>
 		}
 		output[pivot] = value;
 		pivot = input.length;
-		yield [...output] as ExplicitPermutations<T>;
+		const newOutput = new Array(output.length);
+		output.forEach((v, i) => (newOutput[i] = v));
+		yield newOutput as ExplicitPermutations<T>;
 	}
 }

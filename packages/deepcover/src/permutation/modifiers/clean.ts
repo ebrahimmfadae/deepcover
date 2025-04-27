@@ -2,16 +2,13 @@ import type {
 	PermutationGenerator,
 	UnwrapPermutationGenerator,
 } from '#src/permutation/definitions';
-import { merge } from '#src/permutation/utils';
 
-export type OptionalGenerator<out T extends PermutationGenerator = PermutationGenerator> =
+export type CleanGenerator<out T extends PermutationGenerator = PermutationGenerator> =
 	() => Iterable<UnwrapPermutationGenerator<T>>;
 
-export type OptionalPatch<T extends PermutationGenerator = PermutationGenerator> = {
+export type CleanPatch<T extends PermutationGenerator = PermutationGenerator> = {
 	readonly size: T['size'];
-	readonly modifiers: 'optional' extends T['modifiers'][number]
-		? T['modifiers']
-		: ['optional', ...T['modifiers']];
+	readonly modifiers: [];
 	readonly originalInputArg: T;
 	readonly type: T['type'];
 	readonly structure: T['structure'];
@@ -23,15 +20,15 @@ export type OptionalPatch<T extends PermutationGenerator = PermutationGenerator>
 	override: (v: PermutationGenerator) => PermutationGenerator;
 };
 
-export function optional<const T extends PermutationGenerator>(
+export function clean<const T extends PermutationGenerator>(
 	input: T,
-): OptionalGenerator<T> & OptionalPatch {
-	if (isOptional(input)) return input as OptionalGenerator<T> & OptionalPatch;
-	const modifiers = ['optional', ...input.modifiers];
+): CleanGenerator<T> & CleanPatch {
+	if (isClean(input)) return input as CleanGenerator<T> & CleanPatch;
+	const modifiers = [] as [];
 	return Object.assign(
 		function* () {
 			yield* input();
-		} as OptionalGenerator<T>,
+		} as CleanGenerator<T>,
 		{
 			get size() {
 				return input.size;
@@ -55,21 +52,21 @@ export function optional<const T extends PermutationGenerator>(
 				return input.primitivePermutationPaths;
 			},
 			extract(paths) {
-				return optional(input.extract(paths));
+				return clean(input.extract(paths));
 			},
 			exclude(paths) {
-				return optional(input.exclude(paths));
+				return clean(input.exclude(paths));
 			},
 			generatorAt(path) {
 				return input.generatorAt(path);
 			},
 			override(v) {
-				return merge(this, v);
+				return input.override(v);
 			},
-		} satisfies OptionalPatch & ThisType<OptionalGenerator<T> & OptionalPatch>,
-	) as OptionalGenerator<T> & OptionalPatch;
+		} satisfies CleanPatch & ThisType<CleanGenerator<T> & CleanPatch>,
+	) as CleanGenerator<T> & CleanPatch;
 }
 
-export function isOptional(v: PermutationGenerator): v is OptionalGenerator & OptionalPatch {
-	return v.modifiers.includes('optional');
+export function isClean(v: PermutationGenerator): v is CleanGenerator & CleanPatch {
+	return v.modifiers.length === 0;
 }

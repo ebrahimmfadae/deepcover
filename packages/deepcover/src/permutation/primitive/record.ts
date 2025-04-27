@@ -1,19 +1,21 @@
 import type {
-	Permutation,
 	PermutationGenerator,
 	UnwrapPermutation,
 	UnwrapPermutationGenerator,
 } from '#src/permutation/definitions';
-import { each } from '#src/permutation/exports';
-import { concat } from '#src/permutation/primitive/concat';
+import { each, isOptional, optional } from '#src/permutation/exports';
+import { clean } from '#src/permutation/modifiers/clean';
 import { explicitPermutations } from '#src/permutation/pure/explicit-permutations';
 import { REMOVE } from '#src/permutation/symbols';
+import { allPathLevels, merge } from '#src/permutation/utils';
 import type { Sum } from '#src/utils/arithmetic/sum';
 import type { CastAsNumericArray, CastAsPermutationGenerator } from '#src/utils/casting';
 import type { EntryValuesAsTuple } from '#src/utils/common';
+import { hasKey } from '#src/utils/entries';
 import { isExpandableArray } from '#src/utils/expandable-check';
 import type { MultiplyTuple } from '#src/utils/exports';
 import type { ArraySplice, LiteralUnion, Paths, SetOptional, UnionToTuple } from 'type-fest';
+import { series } from './series';
 
 type UnwrapValue<T> = UnwrapPermutation<UnwrapPermutationGenerator<CastAsPermutationGenerator<T>>>;
 type At<A, K extends PropertyKey> = A extends readonly unknown[]
@@ -65,9 +67,7 @@ export type ValidRecordInput =
 	| readonly PermutationGenerator[];
 
 export type GetOptionalKeys<T extends ValidRecordInput> = {
-	[K in keyof T]: 'optional' extends UnwrapPermutationGenerator<
-		CastAsPermutationGenerator<T[K]>
-	>['modifiers'][number]
+	[K in keyof T]: 'optional' extends CastAsPermutationGenerator<T[K]>['modifiers'][number]
 		? K
 		: never;
 };
@@ -90,11 +90,9 @@ export type RecordOutputMapper<T extends ValidRecordInput> = T extends readonly 
 export type SizeCalculator<T extends ValidRecordInput> = {
 	[K in keyof T]: [UnwrapValue<T[K]>] extends [never]
 		? 1
-		: 'optional' extends UnwrapPermutationGenerator<
-					CastAsPermutationGenerator<T[K]>
-			  >['modifiers'][number]
-			? Sum<UnwrapPermutationGenerator<CastAsPermutationGenerator<T[K]>>['size'], 1>
-			: UnwrapPermutationGenerator<CastAsPermutationGenerator<T[K]>>['size'];
+		: 'optional' extends CastAsPermutationGenerator<T[K]>['modifiers'][number]
+			? Sum<CastAsPermutationGenerator<T[K]>['size'], 1>
+			: CastAsPermutationGenerator<T[K]>['size'];
 };
 
 export type SizeAccumulator<T extends ValidRecordInput> = MultiplyTuple<
@@ -108,63 +106,172 @@ export type RecordContext<T extends ValidRecordInput> = {
 	readonly removeKeys?: readonly LiteralUnion<StringifiedPaths<T>, string>[];
 };
 
-export type RecordGenerator<T extends ValidRecordInput> = {
-	<const C extends RecordContext<T>>(
-		context: C,
-	): {
-		readonly size: number;
-		readonly type: 'record';
-		readonly modifiers: [];
-		readonly context: C;
-	} & Iterable<RecordOutputMapper<T>>;
-	<const C extends RecordContext<T>>(
-		context?: C,
-	): {
-		readonly size: SizeAccumulator<T>;
-		readonly type: 'record';
-		readonly modifiers: [];
-	} & Iterable<RecordOutputMapper<T>>;
-} extends infer U extends PermutationGenerator
-	? U
-	: never;
+export type RecordGenerator<T extends ValidRecordInput = ValidRecordInput> = () => Iterable<
+	RecordOutputMapper<T>
+>;
 
-export function record<const T extends ValidRecordInput>(input: T) {
-	return function (context) {
-		const safeContext = { removeKeys: [], ...context };
-		const { removeKeys } = safeContext;
-		const r = Object.entries(input).map(([k, v]): [string, Permutation] => {
-			if (removeKeys.includes(k)) return [k, each(REMOVE)()];
-			const prefix = `${k}.`;
-			const subContext = {
-				removeKeys: removeKeys
-					.filter((u) => u.startsWith(prefix))
-					.map((u) => u.replace(prefix, '')),
-			};
-			const b = v(subContext);
-			return b.modifiers.includes('optional') ? [k, concat(v, REMOVE)(subContext)] : [k, b];
+export type RecordPatch<T extends ValidRecordInput = ValidRecordInput> = {
+	readonly size: SizeAccumulator<T>;
+	readonly originalInputArg: T;
+	readonly type: 'record';
+	readonly modifiers: [];
+	readonly structure: T extends readonly unknown[] ? 'array' : 'pojo';
+	readonly permutationPaths: string[];
+	readonly primitivePermutationPaths: string[];
+	extract: (paths: readonly string[]) => PermutationGenerator;
+	exclude: (paths: readonly string[]) => PermutationGenerator;
+	generatorAt: (path: string) => PermutationGenerator;
+	override: (v: PermutationGenerator) => PermutationGenerator;
+};
+
+// TODO: Support situation when `a` is optional. We should add all `b` permutations without merging.
+//		The problem is that we have cleared modifier data in `series` merging.
+export function mergeRecord(
+	a: RecordGenerator & RecordPatch,
+	b: RecordGenerator & RecordPatch,
+): RecordGenerator & RecordPatch {
+	if (isPojoRecord(a) && isPojoRecord(b)) {
+		const entries = Object.entries(a.originalInputArg).map(([k, u]) => {
+			if (hasKey(b.originalInputArg, k))
+				return [k, u.override(b.originalInputArg[k]!)] as const;
+			return [k, u] as const;
 		});
-		const size = r.map((v) => v[1].size || 1).reduce((acc, curr) => acc * curr, 1);
-		return {
-			size: size as SizeAccumulator<T>,
-			type: 'record',
-			modifiers: [],
-			...(context ? { context } : undefined),
-			*[Symbol.iterator]() {
-				if (isExpandableArray(input)) {
-					yield* explicitPermutations(r.map((v) => v[1])).map((v) => {
-						const clone = [...v];
-						clone.forEach((u, i) => {
-							if (u === REMOVE) delete clone[i];
-						});
-						return clone;
-					});
-				} else {
-					const iterableInput = r.map((v) => Iterator.from(v[1]).map((u) => [v[0], u]));
-					yield* explicitPermutations(iterableInput)
-						.map((v) => v.filter((u) => !!u).filter((u) => u[1] !== REMOVE))
-						.map((v) => Object.fromEntries(v));
-				}
-			},
+		const overrode = {
+			...b.originalInputArg,
+			...Object.fromEntries(entries),
 		};
-	} as RecordGenerator<T>;
+		const res0 = isOptional(a) ? series(record(overrode), clean(b)) : record(overrode);
+		const res = isOptional(b) ? optional(res0) : res0;
+		return res as RecordGenerator & RecordPatch;
+	}
+	if (isArrayRecord(a) && isArrayRecord(b)) {
+		const maxLength = Math.max(a.originalInputArg.length, b.originalInputArg.length);
+		const overrode = Array.from(new Array(maxLength), (u, i) => {
+			if (hasKey(a.originalInputArg, i) && hasKey(b.originalInputArg, i))
+				return a.originalInputArg[i]!.override(b.originalInputArg[i]!);
+			return (a.originalInputArg[i] ?? b.originalInputArg[i])!;
+		});
+		const res0 = isOptional(a) ? series(record(overrode), clean(b)) : record(overrode);
+		const res = isOptional(b) ? optional(res0) : res0;
+		return res as RecordGenerator & RecordPatch;
+	}
+	return b;
+}
+
+export function record<const T extends ValidRecordInput>(
+	input: T,
+): RecordGenerator<T> & RecordPatch<T> {
+	const r = Object.entries(input).map(([k, v]): [string, PermutationGenerator] =>
+		v.modifiers.includes('optional') ? [k, series(clean(v), each(REMOVE))] : [k, v],
+	);
+	const size = r.map((v) => v[1].size || 1).reduce((acc, curr) => acc * curr, 1);
+	return Object.assign(
+		function* () {
+			if (isExpandableArray(input)) {
+				yield* explicitPermutations(r.map((v) => v[1]())).map((v) => {
+					const clone = new Array(v.length);
+					v.forEach((u, i) => {
+						if (u !== REMOVE) clone[i] = u;
+					});
+					return clone;
+				});
+			} else {
+				const iterableInput = r.map((v) => Iterator.from(v[1]()).map((u) => [v[0], u]));
+				yield* explicitPermutations(iterableInput)
+					.map((v) => v.filter((u) => !!u).filter((u) => u[1] !== REMOVE))
+					.map((v) => Object.fromEntries(v));
+			}
+		} as RecordGenerator<T>,
+		{
+			get size() {
+				return size as SizeAccumulator<T>;
+			},
+			get modifiers() {
+				return [] as [];
+			},
+			get originalInputArg() {
+				return input;
+			},
+			get type() {
+				return 'record' as const;
+			},
+			get structure() {
+				return (isExpandableArray(input) ? 'array' : 'pojo') as T extends readonly unknown[]
+					? 'array'
+					: 'pojo';
+			},
+			get permutationPaths() {
+				const entries = Object.entries(input);
+				const pathLevels = entries
+					.flatMap((v) => {
+						const u = v[1].permutationPaths;
+						if (u.length === 0) return [v[0]];
+						return u.map((w) => `${v[0]}.${w}`);
+					})
+					.flatMap((v) => allPathLevels(v));
+				return [...new Set(pathLevels)];
+			},
+			get primitivePermutationPaths() {
+				return this.permutationPaths.filter(
+					(v) => this.generatorAt(v).structure === 'primitive',
+				);
+			},
+			extract(paths) {
+				const extractedInputEntries = Object.entries(input).map(([k, v]) => {
+					const filteredPaths = paths.filter((u) => u.startsWith(k));
+					if (filteredPaths.length === 0) return [k, each()];
+					if (filteredPaths.length === 1 && filteredPaths.includes(k)) return [k, v];
+					const shiftPaths = filteredPaths.map((u) => u.replace(`${k}.`, ''));
+					return [k, v.extract(shiftPaths)];
+				});
+				const extractedInput = isExpandableArray(input)
+					? extractedInputEntries.map((v) => v[1])
+					: Object.fromEntries(extractedInputEntries);
+				return record(extractedInput);
+			},
+			exclude(paths) {
+				const extractedInputEntries = Object.entries(input).map(([k, v]) => {
+					const filteredPaths = paths.filter((u) => u.startsWith(k));
+					if (filteredPaths.length === 0) return [k, v];
+					if (filteredPaths.includes(k)) return [k, each()];
+					const shiftPaths = filteredPaths.map((u) => u.replace(`${k}.`, ''));
+					return [k, v.exclude(shiftPaths)];
+				});
+				const extractedInput = isExpandableArray(input)
+					? extractedInputEntries.map((v) => v[1])
+					: Object.fromEntries(extractedInputEntries);
+				return record(extractedInput);
+			},
+			generatorAt(path) {
+				const [splitted, ...rest] = path?.split('.') ?? [];
+				if (!path || !hasKey(input, splitted)) return each();
+				const v = input[splitted] as PermutationGenerator;
+				if (rest.length === 0) return v;
+				return v.generatorAt(rest.join('.'));
+			},
+			override(v) {
+				return merge(this, v);
+			},
+		} satisfies RecordPatch<T> & ThisType<RecordGenerator<T> & RecordPatch<T>>,
+	) as RecordGenerator<T> & RecordPatch<T>;
+}
+
+export function isRecord(v: PermutationGenerator): v is RecordGenerator & RecordPatch {
+	return v.type === 'record';
+}
+
+export function isPojoRecord(
+	v: PermutationGenerator,
+): v is RecordGenerator<Readonly<Record<string, PermutationGenerator>>> &
+	RecordPatch<Readonly<Record<string, PermutationGenerator>>> {
+	if (!isRecord(v)) return false;
+	return v.structure === 'pojo';
+}
+
+export function isArrayRecord(
+	v: PermutationGenerator,
+): v is RecordGenerator<readonly PermutationGenerator[]> &
+	RecordPatch<readonly PermutationGenerator[]> {
+	if (!isRecord(v)) return false;
+	return v.structure === 'array';
 }
