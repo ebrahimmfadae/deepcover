@@ -25,8 +25,8 @@ export type OptionalPatch<T extends PermutationGenerator = PermutationGenerator>
 
 export function optional<const T extends PermutationGenerator>(
 	input: T,
-): OptionalGenerator<T> & OptionalPatch {
-	if (isOptional(input)) return input as OptionalGenerator<T> & OptionalPatch;
+): OptionalGenerator<T> & OptionalPatch<T> {
+	if (isOptional(input)) return input as unknown as OptionalGenerator<T> & OptionalPatch<T>;
 	const modifiers = ['optional', ...input.modifiers];
 	return Object.assign(
 		function* () {
@@ -66,8 +66,8 @@ export function optional<const T extends PermutationGenerator>(
 			override(v) {
 				return merge(this, v);
 			},
-		} satisfies OptionalPatch & ThisType<OptionalGenerator<T> & OptionalPatch>,
-	) as OptionalGenerator<T> & OptionalPatch;
+		} satisfies OptionalPatch & ThisType<OptionalGenerator<T> & OptionalPatch<T>>,
+	) as OptionalGenerator<T> & OptionalPatch<T>;
 }
 
 export function isOptional(v: PermutationGenerator): v is OptionalGenerator & OptionalPatch {

@@ -12,13 +12,14 @@ export type BuildTuple<T, S, U extends readonly unknown[] = readonly []> = (
 	? P
 	: never;
 export type SplitEntries<T extends Expandable, K extends keyof T = keyof T> =
-	UnionToTuple<K extends unknown ? [T[K]] : never> extends infer U extends readonly (readonly [
+	UnionToTuple<K extends unknown ? [K, T[K]] : never> extends infer U extends readonly (readonly [
+		unknown,
 		unknown,
 	])[]
 		? U
 		: never;
-export type UnwrapSplitEntries<T extends readonly (readonly [unknown])[]> = {
-	[K in keyof T]: T[K][0];
+export type UnwrapSplitEntries<T extends readonly (readonly [unknown, unknown])[]> = {
+	[K in keyof T]: T[K][1];
 };
 export type EntryValuesAsTuple<T extends Expandable> = T extends ExpandableArray
 	? T
