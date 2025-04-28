@@ -1,5 +1,5 @@
 {
-  "name": "@deepcover/core",
+  "name": "deepcover",
   "version": "0.1.0-alpha.1",
   "description": "",
   "type": "module",
