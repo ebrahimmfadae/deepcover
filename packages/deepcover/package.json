@@ -1,6 +1,6 @@
 {
   "name": "@deepcover/core",
-  "version": "0.1.0-rc.13",
+  "version": "0.1.0-alpha.1",
   "description": "",
   "type": "module",
   "scripts": {
