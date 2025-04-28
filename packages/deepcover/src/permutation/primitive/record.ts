@@ -16,7 +16,7 @@ import { hasKey } from '#src/utils/entries';
 import { isExpandableArray } from '#src/utils/expandable-check';
 import type { MultiplyTuple } from '#src/utils/exports';
 import type { ArraySplice, LiteralUnion, Paths, SetOptional, UnionToTuple } from 'type-fest';
-import { series } from './series';
+import { series } from '#src/permutation/primitive/series';
 
 type UnwrapValue<T> = UnwrapPermutation<UnwrapPermutationGenerator<CastAsPermutationGenerator<T>>>;
 type At<A, K extends PropertyKey> = A extends readonly unknown[]
