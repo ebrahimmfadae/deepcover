@@ -1,30 +1,16 @@
-import { cachedIterable } from '#src/permutation/pure/cached-iterable';
 import { explicitPermutations } from '#src/permutation/pure/explicit-permutations';
 import { REMOVE } from '#src/permutation/symbols';
-import { isExpandableObject, type Expandable } from '#src/utils/expandable-check';
 
-export type ReadonlyExpandableOfIterables =
-	| Readonly<Record<string, Iterable<unknown>>>
-	| readonly Iterable<unknown>[];
+export type Combinations<T extends readonly unknown[]> = Set<T[number]>;
 
-export type Combinations<T extends ReadonlyExpandableOfIterables> = {
-	[K in keyof T]: (T[K] extends Iterable<infer P> ? P : never) | typeof REMOVE;
-} extends infer P extends Expandable
-	? P
-	: never;
-
-export function* combinations<const T extends ReadonlyExpandableOfIterables>(
+export function* combinations<const T extends readonly unknown[]>(
 	input: T,
+	limits: { min?: number; max?: number } = {},
 ): Generator<Combinations<T>, void, unknown> {
-	const entries = Object.entries(input);
-	const slots = entries.map(([k, v]) => [
-		[[k], cachedIterable(v)],
-		[[k], [REMOVE]],
-	]);
-	const shouldConvertToObject = isExpandableObject(input);
+	const { min = 1, max = input.length } = limits;
+	const slots = input.map((v) => [v, REMOVE] as const);
 	for (const element of explicitPermutations(slots)) {
-		const result = explicitPermutations(element.map((v) => explicitPermutations(v)));
-		if (shouldConvertToObject) yield* result.map((v) => Object.fromEntries(v));
-		else yield* result.map((v) => v.map((u) => u[1])) as Iterable<Combinations<T>>;
+		const f = element.filter((v) => v !== REMOVE);
+		if (f.length >= min && f.length <= max) yield new Set(f);
 	}
 }

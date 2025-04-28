@@ -1,4 +1,5 @@
 import type { PermutationGenerator } from '#src/permutation/definitions';
+import { merge } from '#src/permutation/utils';
 import type { Length, TupleToUnion } from '#src/utils/common';
 import type { LiteralUnion, Paths } from 'type-fest';
 
@@ -68,9 +69,9 @@ export function each<const T extends readonly unknown[]>(
 				return each(...values);
 			},
 			override(v) {
-				return v;
+				return merge(this, v);
 			},
-		} satisfies EachPatch<T>,
+		} satisfies EachPatch<T> & ThisType<EachGenerator<T> & EachPatch<T>>,
 	) as EachGenerator<T> & EachPatch<T>;
 }
 

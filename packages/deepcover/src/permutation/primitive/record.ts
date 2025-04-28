@@ -5,6 +5,7 @@ import type {
 } from '#src/permutation/definitions';
 import { each, isOptional, optional } from '#src/permutation/exports';
 import { clean } from '#src/permutation/modifiers/clean';
+import { space } from '#src/permutation/primitive/space';
 import { explicitPermutations } from '#src/permutation/pure/explicit-permutations';
 import { REMOVE } from '#src/permutation/symbols';
 import { allPathLevels, merge } from '#src/permutation/utils';
@@ -146,7 +147,7 @@ export function mergeRecord(
 	}
 	if (isArrayRecord(a) && isArrayRecord(b)) {
 		const maxLength = Math.max(a.originalInputArg.length, b.originalInputArg.length);
-		const overrode = Array.from(new Array(maxLength), (u, i) => {
+		const overrode = Array.from(new Array(maxLength), (_, i) => {
 			if (hasKey(a.originalInputArg, i) && hasKey(b.originalInputArg, i))
 				return a.originalInputArg[i]!.override(b.originalInputArg[i]!);
 			return (a.originalInputArg[i] ?? b.originalInputArg[i])!;
@@ -219,7 +220,7 @@ export function record<const T extends ValidRecordInput>(
 			extract(paths) {
 				const extractedInputEntries = Object.entries(input).map(([k, v]) => {
 					const filteredPaths = paths.filter((u) => u.startsWith(k));
-					if (filteredPaths.length === 0) return [k, each()];
+					if (filteredPaths.length === 0) return [k, space()];
 					if (filteredPaths.length === 1 && filteredPaths.includes(k)) return [k, v];
 					const shiftPaths = filteredPaths.map((u) => u.replace(`${k}.`, ''));
 					return [k, v.extract(shiftPaths)];
@@ -233,7 +234,7 @@ export function record<const T extends ValidRecordInput>(
 				const extractedInputEntries = Object.entries(input).map(([k, v]) => {
 					const filteredPaths = paths.filter((u) => u.startsWith(k));
 					if (filteredPaths.length === 0) return [k, v];
-					if (filteredPaths.includes(k)) return [k, each()];
+					if (filteredPaths.includes(k)) return [k, space()];
 					const shiftPaths = filteredPaths.map((u) => u.replace(`${k}.`, ''));
 					return [k, v.exclude(shiftPaths)];
 				});
