@@ -5,6 +5,7 @@ import type {
 } from '#src/permutation/definitions';
 import { each, isOptional, optional } from '#src/permutation/exports';
 import { clean } from '#src/permutation/modifiers/clean';
+import { series } from '#src/permutation/primitive/series';
 import { space } from '#src/permutation/primitive/space';
 import { explicitPermutations } from '#src/permutation/pure/explicit-permutations';
 import { REMOVE } from '#src/permutation/symbols';
@@ -16,7 +17,6 @@ import { hasKey } from '#src/utils/entries';
 import { isExpandableArray } from '#src/utils/expandable-check';
 import type { MultiplyTuple } from '#src/utils/exports';
 import type { ArraySplice, LiteralUnion, Paths, SetOptional, UnionToTuple } from 'type-fest';
-import { series } from '#src/permutation/primitive/series';
 
 type UnwrapValue<T> = UnwrapPermutation<UnwrapPermutationGenerator<CastAsPermutationGenerator<T>>>;
 type At<A, K extends PropertyKey> = A extends readonly unknown[]
@@ -125,8 +125,6 @@ export type RecordPatch<T extends ValidRecordInput = ValidRecordInput> = {
 	override: (v: PermutationGenerator) => PermutationGenerator;
 };
 
-// TODO: Support situation when `a` is optional. We should add all `b` permutations without merging.
-//		The problem is that we have cleared modifier data in `series` merging.
 export function mergeRecord(
 	a: RecordGenerator & RecordPatch,
 	b: RecordGenerator & RecordPatch,

@@ -9,7 +9,10 @@ import { clean, isClean } from '#src/permutation/modifiers/clean';
 import { each } from '#src/permutation/primitive/each';
 import { explicitPermutations } from '#src/permutation/pure/explicit-permutations';
 import { allPathLevels, merge } from '#src/permutation/utils';
+import type { CastAsPermutationGenerator } from '#src/utils/casting';
 import { hasKey } from '#src/utils/entries';
+
+type UnwrapValue<T> = UnwrapPermutation<UnwrapPermutationGenerator<CastAsPermutationGenerator<T>>>;
 
 function flattenValues(a: readonly PermutationGenerator[]): readonly PermutationGenerator[] {
 	return a.flatMap((v) => (isSeries(v) ? flattenValues(v.originalInputArg) : v));
@@ -20,7 +23,7 @@ export type SeriesContext = {
 };
 
 export type SeriesIterable<T extends readonly PermutationGenerator[]> =
-	Iterable<UnwrapPermutation<UnwrapPermutationGenerator<T[number]>>> extends infer P ? P : never;
+	Iterable<UnwrapValue<T[number]>> extends infer P ? P : never;
 
 export type SeriesGenerator<
 	T extends readonly PermutationGenerator[] = readonly PermutationGenerator[],
