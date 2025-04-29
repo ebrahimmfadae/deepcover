@@ -1,11 +1,15 @@
 import type {
 	PermutationGenerator,
+	UnwrapPermutation,
 	UnwrapPermutationGenerator,
 } from '#src/permutation/definitions';
 import { merge } from '#src/permutation/utils';
+import type { CastAsPermutationGenerator } from '#src/utils/casting';
+
+type UnwrapValue<T> = UnwrapPermutation<UnwrapPermutationGenerator<CastAsPermutationGenerator<T>>>;
 
 export type OptionalGenerator<out T extends PermutationGenerator = PermutationGenerator> =
-	() => Iterable<UnwrapPermutationGenerator<T>>;
+	() => Iterable<UnwrapValue<T>>;
 
 export type OptionalPatch<T extends PermutationGenerator = PermutationGenerator> = {
 	readonly size: T['size'];
