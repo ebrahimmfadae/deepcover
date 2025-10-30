@@ -1,1 +1,1 @@
-export * from '#src/permutation/modifiers/optional';
+export { optional } from '#src/permutation/modifiers/optional';

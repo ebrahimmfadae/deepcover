@@ -1,48 +1,19 @@
 import type { PermutationGenerator } from '#src/permutation/definitions';
+import type { Each, EachPatch } from '#src/permutation/primitive/each.types';
 import { merge } from '#src/permutation/utils';
-import type { Length, TupleToUnion } from '#src/utils/common';
-import type { LiteralUnion, Paths } from 'type-fest';
+import type { Length } from '#src/utils/common';
 
-export type EachContext<T extends readonly unknown[]> = {
-	readonly removeKeys?: readonly LiteralUnion<
-		Paths<T[number]> extends infer U extends string ? U : never,
-		string
-	>[];
-};
-
-export type EachIterable<T extends readonly unknown[]> =
-	Iterable<TupleToUnion<T>> extends infer U ? U : never;
-
-export type EachGenerator<T extends readonly unknown[] = readonly unknown[]> =
-	() => EachIterable<T>;
-
-export type EachPatch<T extends readonly unknown[] = readonly unknown[]> = {
-	readonly size: Length<T>;
-	readonly modifiers: [];
-	readonly originalInputArg: readonly unknown[];
-	readonly type: 'each';
-	readonly structure: 'primitive';
-	readonly permutationPaths: string[];
-	readonly primitivePermutationPaths: string[];
-	extract: (paths: readonly string[]) => PermutationGenerator;
-	exclude: (paths: readonly string[]) => PermutationGenerator;
-	generatorAt: (path: string) => PermutationGenerator;
-	override: (v: PermutationGenerator) => PermutationGenerator;
-};
-
-export function each<const T extends readonly unknown[]>(
-	...values: T
-): EachGenerator<T> & EachPatch<T> {
+export function each<const T extends readonly unknown[]>(...values: T): Each<T> {
 	return Object.assign(
 		function* () {
 			yield* values;
-		} as EachGenerator<T>,
+		},
 		{
 			get size() {
-				return values.length as Length<T>;
+				return BigInt(values.length) as Length<T>;
 			},
 			get modifiers() {
-				return [] as [];
+				return [] as readonly never[];
 			},
 			get originalInputArg() {
 				return values;
@@ -54,10 +25,10 @@ export function each<const T extends readonly unknown[]>(
 				return 'primitive' as const;
 			},
 			get permutationPaths() {
-				return [];
+				return [] as readonly string[];
 			},
 			get primitivePermutationPaths() {
-				return [];
+				return [] as readonly string[];
 			},
 			extract(paths) {
 				return paths.length > 0 ? each() : each(...values);
@@ -71,10 +42,10 @@ export function each<const T extends readonly unknown[]>(
 			override(v) {
 				return merge(this, v);
 			},
-		} satisfies EachPatch<T> & ThisType<EachGenerator<T> & EachPatch<T>>,
-	) as EachGenerator<T> & EachPatch<T>;
+		} satisfies EachPatch<T> & ThisType<Each<T>>,
+	);
 }
 
-export function isEach(v: PermutationGenerator): v is EachGenerator & EachPatch {
+export function isEach(v: PermutationGenerator): v is Each {
 	return v.type === 'each';
 }

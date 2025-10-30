@@ -1,33 +1,15 @@
 import type { PermutationGenerator } from '#src/permutation/definitions';
-import { each } from '#src/permutation/exports';
+import { each } from '#src/permutation/primitive/each';
+import type { Space, SpacePatch } from '#src/permutation/primitive/space.types';
 import { merge } from '#src/permutation/utils';
 
-export type SpaceGenerator = () => Iterable<never>;
-
-export type SpacePatch = {
-	readonly size: 0;
-	readonly modifiers: [];
-	readonly originalInputArg: undefined;
-	readonly type: 'space';
-	readonly structure: 'primitive';
-	readonly permutationPaths: [];
-	readonly primitivePermutationPaths: [];
-	extract: () => PermutationGenerator;
-	exclude: () => PermutationGenerator;
-	generatorAt: () => PermutationGenerator;
-	override: (v: PermutationGenerator) => PermutationGenerator;
-};
-
-export function space(): SpaceGenerator & SpacePatch {
-	return Object.assign(function* () {} as SpaceGenerator, {
+export function space(): Space {
+	return Object.assign(function* () {}, {
 		get size() {
-			return 0 as const;
+			return 0n as const;
 		},
 		get modifiers() {
-			return [] as [];
-		},
-		get originalInputArg() {
-			return undefined;
+			return [] as readonly never[];
 		},
 		get type() {
 			return 'space' as const;
@@ -36,10 +18,10 @@ export function space(): SpaceGenerator & SpacePatch {
 			return 'primitive' as const;
 		},
 		get permutationPaths() {
-			return [] as [];
+			return [] as readonly never[];
 		},
 		get primitivePermutationPaths() {
-			return [] as [];
+			return [] as readonly never[];
 		},
 		extract() {
 			return each();
@@ -53,9 +35,9 @@ export function space(): SpaceGenerator & SpacePatch {
 		override(v) {
 			return merge(this, v);
 		},
-	} satisfies SpacePatch & ThisType<SpaceGenerator & SpacePatch>) as SpaceGenerator & SpacePatch;
+	} satisfies SpacePatch & ThisType<Space>);
 }
 
-export function isSpace(v: PermutationGenerator): v is SpaceGenerator & SpacePatch {
+export function isSpace(v: PermutationGenerator): v is Space {
 	return v.type === 'space';
 }

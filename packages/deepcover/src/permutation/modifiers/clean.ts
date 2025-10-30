@@ -1,43 +1,21 @@
-import type {
-	PermutationGenerator,
-	UnwrapPermutationGenerator,
-} from '#src/permutation/definitions';
+import type { PermutationGenerator } from '#src/permutation/definitions';
+import type { CleanPatch, Clean } from '#src/permutation/modifiers/clean.types';
 
-export type CleanGenerator<out T extends PermutationGenerator = PermutationGenerator> =
-	() => Iterable<UnwrapPermutationGenerator<T>>;
-
-export type CleanPatch<T extends PermutationGenerator = PermutationGenerator> = {
-	readonly size: T['size'];
-	readonly modifiers: [];
-	readonly originalInputArg: T;
-	readonly type: T['type'];
-	readonly structure: T['structure'];
-	readonly permutationPaths: readonly string[];
-	readonly primitivePermutationPaths: readonly string[];
-	extract: (paths: readonly string[]) => PermutationGenerator;
-	exclude: (paths: readonly string[]) => PermutationGenerator;
-	generatorAt: (path: string) => PermutationGenerator;
-	override: (v: PermutationGenerator) => PermutationGenerator;
-};
-
-export function clean<const T extends PermutationGenerator>(
-	input: T,
-): CleanGenerator<T> & CleanPatch {
-	if (isClean(input)) return input as CleanGenerator<T> & CleanPatch;
-	const modifiers = [] as [];
+export function clean<const T extends PermutationGenerator>(input: T): Clean<T> {
+	if (isClean(input)) return input as unknown as Clean<T>;
 	return Object.assign(
 		function* () {
 			yield* input();
-		} as CleanGenerator<T>,
+		},
 		{
 			get size() {
 				return input.size;
 			},
 			get modifiers() {
-				return modifiers;
+				return [] as readonly never[];
 			},
 			get originalInputArg() {
-				return input.originalInputArg as PermutationGenerator;
+				return input.originalInputArg as T;
 			},
 			get type() {
 				return input.type;
@@ -63,10 +41,10 @@ export function clean<const T extends PermutationGenerator>(
 			override(v) {
 				return input.override(v);
 			},
-		} satisfies CleanPatch & ThisType<CleanGenerator<T> & CleanPatch>,
-	) as CleanGenerator<T> & CleanPatch;
+		} satisfies CleanPatch<T> & ThisType<T>,
+	) as Clean<T>;
 }
 
-export function isClean(v: PermutationGenerator): v is CleanGenerator & CleanPatch {
+export function isClean(v: PermutationGenerator): v is Clean {
 	return v.modifiers.length === 0;
 }

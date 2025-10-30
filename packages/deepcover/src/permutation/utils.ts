@@ -1,14 +1,8 @@
 import type { PermutationGenerator } from '#src/permutation/definitions';
-import {
-	each,
-	isEach,
-	isRecord,
-	isSeries,
-	mergeRecord,
-	mergeSeries,
-	series,
-} from '#src/permutation/exports';
 import { clean } from '#src/permutation/modifiers/clean';
+import { each, isEach } from '#src/permutation/primitive/each';
+import { isRecord, mergeRecord } from '#src/permutation/primitive/record';
+import { isSeries, mergeSeries, series } from '#src/permutation/primitive/series';
 import { isSpace } from '#src/permutation/primitive/space';
 
 export function allPathLevels(path: string): string[] {

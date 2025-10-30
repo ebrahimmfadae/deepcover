@@ -1,41 +1,18 @@
+import type { PermutationGenerator } from '#src/permutation/definitions';
 import type {
-	PermutationGenerator,
-	UnwrapPermutation,
-	UnwrapPermutationGenerator,
-} from '#src/permutation/definitions';
+	AppendModifier,
+	Optional,
+	OptionalPatch,
+} from '#src/permutation/modifiers/optional.types';
 import { merge } from '#src/permutation/utils';
-import type { CastAsPermutationGenerator } from '#src/utils/casting';
 
-type UnwrapValue<T> = UnwrapPermutation<UnwrapPermutationGenerator<CastAsPermutationGenerator<T>>>;
-
-export type OptionalGenerator<out T extends PermutationGenerator = PermutationGenerator> =
-	() => Iterable<UnwrapValue<T>>;
-
-export type OptionalPatch<T extends PermutationGenerator = PermutationGenerator> = {
-	readonly size: T['size'];
-	readonly modifiers: 'optional' extends T['modifiers'][number]
-		? T['modifiers']
-		: ['optional', ...T['modifiers']];
-	readonly originalInputArg: T;
-	readonly type: T['type'];
-	readonly structure: T['structure'];
-	readonly permutationPaths: readonly string[];
-	readonly primitivePermutationPaths: readonly string[];
-	extract: (paths: readonly string[]) => PermutationGenerator;
-	exclude: (paths: readonly string[]) => PermutationGenerator;
-	generatorAt: (path: string) => PermutationGenerator;
-	override: (v: PermutationGenerator) => PermutationGenerator;
-};
-
-export function optional<const T extends PermutationGenerator>(
-	input: T,
-): OptionalGenerator<T> & OptionalPatch<T> {
-	if (isOptional(input)) return input as unknown as OptionalGenerator<T> & OptionalPatch<T>;
-	const modifiers = ['optional', ...input.modifiers];
+export function optional<const T extends PermutationGenerator>(input: T): Optional<T> {
+	if (isOptional(input)) return input as unknown as Optional<T>;
+	const modifiers = ['optional', ...input.modifiers] as AppendModifier<T['modifiers']>;
 	return Object.assign(
 		function* () {
 			yield* input();
-		} as OptionalGenerator<T>,
+		},
 		{
 			get size() {
 				return input.size;
@@ -44,7 +21,7 @@ export function optional<const T extends PermutationGenerator>(
 				return modifiers;
 			},
 			get originalInputArg() {
-				return input.originalInputArg as PermutationGenerator;
+				return input.originalInputArg as T;
 			},
 			get type() {
 				return input.type;
@@ -70,10 +47,10 @@ export function optional<const T extends PermutationGenerator>(
 			override(v) {
 				return merge(this, v);
 			},
-		} satisfies OptionalPatch & ThisType<OptionalGenerator<T> & OptionalPatch<T>>,
-	) as OptionalGenerator<T> & OptionalPatch<T>;
+		} satisfies OptionalPatch<T> & ThisType<Optional<T>>,
+	) as Optional<T>;
 }
 
-export function isOptional(v: PermutationGenerator): v is OptionalGenerator & OptionalPatch {
+export function isOptional(v: PermutationGenerator): v is Optional {
 	return v.modifiers.includes('optional');
 }

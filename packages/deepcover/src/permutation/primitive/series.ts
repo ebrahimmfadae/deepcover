@@ -1,52 +1,17 @@
-import type {
-	PermutationGenerator,
-	Structure,
-	UnwrapPermutation,
-	UnwrapPermutationGenerator,
-} from '#src/permutation/definitions';
-import { isOptional, optional } from '#src/permutation/exports';
+import type { PermutationGenerator } from '#src/permutation/definitions';
 import { clean, isClean } from '#src/permutation/modifiers/clean';
+import { isOptional, optional } from '#src/permutation/modifiers/optional';
 import { each } from '#src/permutation/primitive/each';
+import type { Series, SeriesPatch, SeriesSize } from '#src/permutation/primitive/series.types';
 import { explicitPermutations } from '#src/permutation/pure/explicit-permutations';
 import { allPathLevels, merge } from '#src/permutation/utils';
-import type { CastAsPermutationGenerator } from '#src/utils/casting';
 import { hasKey } from '#src/utils/entries';
-
-type UnwrapValue<T> = UnwrapPermutation<UnwrapPermutationGenerator<CastAsPermutationGenerator<T>>>;
 
 function flattenValues(a: readonly PermutationGenerator[]): readonly PermutationGenerator[] {
 	return a.flatMap((v) => (isSeries(v) ? flattenValues(v.originalInputArg) : v));
 }
 
-export type SeriesContext = {
-	readonly removeKeys?: readonly string[];
-};
-
-export type SeriesIterable<T extends readonly PermutationGenerator[]> =
-	Iterable<UnwrapValue<T[number]>> extends infer P ? P : never;
-
-export type SeriesGenerator<
-	T extends readonly PermutationGenerator[] = readonly PermutationGenerator[],
-> = () => SeriesIterable<T>;
-
-export type SeriesPatch = {
-	readonly size: number;
-	readonly modifiers: [];
-	readonly originalInputArg: readonly PermutationGenerator[];
-	readonly type: 'series';
-	readonly structure: Structure;
-	readonly permutationPaths: string[];
-	readonly primitivePermutationPaths: string[];
-	extract: (paths: readonly string[]) => PermutationGenerator;
-	exclude: (paths: readonly string[]) => PermutationGenerator;
-	generatorAt: (path: string) => PermutationGenerator;
-	override: (v: PermutationGenerator) => PermutationGenerator;
-};
-
-export function mergeSeries(
-	a: SeriesGenerator & SeriesPatch,
-	b: SeriesGenerator & SeriesPatch,
-): SeriesGenerator & SeriesPatch {
+export function mergeSeries(a: Series, b: Series): Series {
 	const grouped1 = Object.groupBy(a.originalInputArg, (v) => v.structure);
 	const grouped2 = Object.groupBy(b.originalInputArg, (v) => v.structure);
 	const includesNotMergeable =
@@ -67,28 +32,26 @@ export function mergeSeries(
 	const s = series(...rPojo, ...rArray, ...(grouped2.primitive ?? []));
 	const res0 = includesNotMergeable ? series(s, clean(b)) : s;
 	const res = isOptional(b) ? optional(res0) : res0;
-	return res as SeriesGenerator & SeriesPatch;
+	return res as Series;
 }
 
-export function series<const T extends readonly PermutationGenerator[]>(
-	...values: T
-): SeriesGenerator<T> & SeriesPatch {
+export function series<const T extends readonly PermutationGenerator[]>(...values: T): Series<T> {
 	if (values.some((v) => !isClean(v)))
 		throw new Error(`A 'series' can't have components with direct modifiers.`);
 	const flatValues = flattenValues(values);
 	const structures = new Set(flatValues.map((v) => v.structure));
 	const structure = structures.size === 1 ? structures.values().next().value! : 'mixed';
-	const size = flatValues.map((v) => v.size).reduce((prev, curr) => prev + curr, 0);
+	const size = flatValues.map((v) => v.size).reduce((prev, curr) => prev + curr, 0n);
 	return Object.assign(
 		function* () {
 			for (const element of flatValues) yield* element();
-		} as SeriesGenerator<T>,
+		},
 		{
 			get size() {
-				return size;
+				return size as SeriesSize<T>;
 			},
 			get modifiers() {
-				return [] as [];
+				return [] as readonly never[];
 			},
 			get originalInputArg() {
 				return flatValues;
@@ -147,10 +110,10 @@ export function series<const T extends readonly PermutationGenerator[]>(
 			override(v) {
 				return merge(this, v);
 			},
-		} satisfies SeriesPatch & ThisType<SeriesGenerator<T> & SeriesPatch>,
-	) as SeriesGenerator<T> & SeriesPatch;
+		} satisfies SeriesPatch<T> & ThisType<Series<T>>,
+	) as Series<T>;
 }
 
-export function isSeries(v: PermutationGenerator): v is SeriesGenerator & SeriesPatch {
+export function isSeries(v: PermutationGenerator): v is Series {
 	return v.type === 'series';
 }

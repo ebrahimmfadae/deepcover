@@ -29,3 +29,7 @@ Welcome to DeepCover, the ultimate tool for maximizing your test coverage! 🌟 
 ### Playground
 
 - [ ] Add in browser playground
+
+### Heads up
+
+- VSCode built-in TypeScript SDK has stricter limits; To avoid excessive depth errors, use `node_modules` SDK

@@ -77,7 +77,7 @@ export default [
 			'import/no-dynamic-require': 'error',
 			'import/newline-after-import': 'error',
 			'import/first': 'error',
-			'import/exports-last': 'error',
+			'import/exports-last': 'off',
 		},
 	},
 ];

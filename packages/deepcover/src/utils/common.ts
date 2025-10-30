@@ -41,5 +41,13 @@ export type ToPrimitive<T> = T extends number
 						? undefined
 						: never;
 export type Length<T extends readonly unknown[]> = T extends { length: infer L extends number }
-	? L
+	? `${L}` extends `${infer S extends bigint}`
+		? S
+		: never
 	: never;
+export type FlattenTuple<
+	T extends readonly unknown[],
+	A extends readonly unknown[] = readonly [],
+> = T extends readonly [infer F, ...infer R]
+	? FlattenTuple<R, F extends readonly unknown[] ? [...A, ...F] : [...A, F]>
+	: A;

@@ -7,7 +7,7 @@ type Or<left extends boolean, right extends boolean> = left extends true
 		? true
 		: false;
 
-type CoalesceToString<n extends string | number | bigint> = n extends string ? n : `${n}`;
+type CoalesceToString<n extends bigint> = n extends string ? n : `${n}`;
 
 type Digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
 
@@ -159,13 +159,17 @@ type SumStrings<
 				: never
 			: never;
 
-export type Sum<left extends string | number | bigint, right extends string | number | bigint> =
-	SumStrings<CoalesceToString<left>, CoalesceToString<right>> extends `${infer n extends number}`
+export type Sum<left extends bigint, right extends bigint> = bigint extends left | right
+	? bigint
+	: SumStrings<
+				CoalesceToString<left>,
+				CoalesceToString<right>
+		  > extends `${infer n extends bigint}`
 		? n
 		: never;
 
-export type SumTuple<T extends readonly number[], N extends number = 0> = readonly [] extends T
-	? 0
-	: T extends readonly [infer Head extends number, ...infer U extends readonly number[]]
+export type SumTuple<T extends readonly bigint[], N extends bigint = 0n> = readonly [] extends T
+	? 0n
+	: T extends readonly [infer Head extends bigint, ...infer U extends readonly bigint[]]
 		? SumTuple<U, Sum<Head, N>>
 		: N;
