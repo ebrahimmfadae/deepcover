@@ -141,6 +141,10 @@ export function record<const T extends ValidRecordInput>(input: T): MyRecord<T> 
 	);
 }
 
+export function component<const T extends ValidRecordInput>(input: T): T {
+	return input;
+}
+
 export function isRecord(v: PermutationGenerator): v is MyRecord {
 	return v.type === 'record';
 }
