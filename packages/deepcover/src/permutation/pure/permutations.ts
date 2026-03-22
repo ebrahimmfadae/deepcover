@@ -2,22 +2,26 @@ import { cachedIterable } from '#src/permutation/pure/cached-iterable';
 import { iterableWithIndex } from '#src/permutation/pure/iterable-with-index';
 import type { BuildTuple } from '#src/utils/common';
 
-const defaultPermutationsOptions: DefaultPermutationsOptions = {
+const defaultPermutationsOptions = Object.freeze({
 	size: 1,
 	exclusive: false,
-};
+}) as { readonly size: 1; readonly exclusive: false };
 
-export type PermutationsOptions = Readonly<{ size: number; exclusive?: boolean }>;
+export type PermutationsOptions = { readonly size: number; readonly exclusive?: boolean };
 
-export type DefaultPermutationsOptions = PermutationsOptions &
-	Readonly<{ size: 1; exclusive: false }>;
-
-export type Permutations<T, U extends PermutationsOptions> = Readonly<BuildTuple<T, U['size']>>;
+export type Permutations<T, U extends PermutationsOptions> = [T] extends [never]
+	? never
+	: 0 extends U['size']
+		? never
+		: Readonly<BuildTuple<T, U['size']>>;
 
 export function* permutations<
 	const T,
 	const U extends PermutationsOptions = typeof defaultPermutationsOptions,
->(input: Iterable<T>, options?: U): Generator<Permutations<T, U>, void, unknown> {
+>(
+	input: Iterable<T>,
+	options?: U & PermutationsOptions,
+): Generator<Permutations<T, U>, void, unknown> {
 	const {
 		size = defaultPermutationsOptions.size,
 		exclusive = defaultPermutationsOptions.exclusive,

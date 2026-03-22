@@ -1,7 +1,9 @@
 import { explicitPermutations } from '#src/permutation/pure/explicit-permutations';
 import { REMOVE } from '#src/permutation/symbols';
 
-export type Combinations<T extends readonly unknown[]> = Set<T[number]>;
+export type Combinations<T extends readonly unknown[]> = T extends readonly []
+	? never
+	: Set<T[number]>;
 
 export function* combinations<const T extends readonly unknown[]>(
 	input: T,
@@ -11,6 +13,6 @@ export function* combinations<const T extends readonly unknown[]>(
 	const slots = input.map((v) => [v, REMOVE] as const);
 	for (const element of explicitPermutations(slots)) {
 		const f = element.filter((v) => v !== REMOVE);
-		if (f.length >= min && f.length <= max) yield new Set(f);
+		if (f.length >= min && f.length <= max) yield new Set(f) as Combinations<T>;
 	}
 }
