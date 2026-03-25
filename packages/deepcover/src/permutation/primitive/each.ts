@@ -25,10 +25,10 @@ export function each<const T extends readonly unknown[]>(...values: T): Each<T> 
 				return 'primitive' as const;
 			},
 			get permutationPaths() {
-				return [] as readonly string[];
+				return [] as readonly [];
 			},
 			get primitivePermutationPaths() {
-				return [] as readonly string[];
+				return [] as readonly [];
 			},
 			extract(paths) {
 				return paths.length > 0 ? each() : each(...values);

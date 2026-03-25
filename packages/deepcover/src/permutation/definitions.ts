@@ -20,6 +20,10 @@ export interface PermutationPatch {
 	readonly extract: (paths: readonly string[]) => PermutationGenerator;
 	readonly exclude: (paths: readonly string[]) => PermutationGenerator;
 	readonly generatorAt: (path: string) => PermutationGenerator;
+	/**
+	 * The override function equals merge
+	 * TODO: Maybe alter is a better name
+	 */
 	readonly override: (v: PermutationGenerator) => PermutationGenerator;
 }
 export interface PermutationGenerator<out T extends Permutation = Permutation>

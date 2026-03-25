@@ -11,6 +11,8 @@ export interface EachPatch<out T extends readonly unknown[]> extends Permutation
 	readonly originalInputArg: T;
 	readonly type: 'each';
 	readonly structure: 'primitive';
+	readonly permutationPaths: readonly [];
+	readonly primitivePermutationPaths: readonly [];
 }
 
 export interface Each<T extends readonly unknown[] = readonly unknown[]>

@@ -51,3 +51,13 @@ export type FlattenTuple<
 > = T extends readonly [infer F, ...infer R]
 	? FlattenTuple<R, F extends readonly unknown[] ? [...A, ...F] : [...A, F]>
 	: A;
+export type ExtractIndices<T extends readonly unknown[]> = {
+	[K in keyof T]: K extends `${infer U extends number}` ? U : never;
+}[keyof T & number];
+export type ExtractKeys<T extends Expandable> =
+	T extends Readonly<Record<string, unknown>>
+		? keyof T
+		: T extends readonly unknown[]
+			? ExtractIndices<T> & keyof T
+			: never;
+export type Stringify<T extends Primitive> = T extends string ? T : `${T}`;

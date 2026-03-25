@@ -7,8 +7,8 @@ import type {
 import type { MultiplyTuple } from '#src/utils/arithmetic/multiply';
 import type { Sum } from '#src/utils/arithmetic/sum';
 import type { CastAsNumericArray, CastAsPermutationGenerator } from '#src/utils/casting';
-import type { EntryValuesAsTuple } from '#src/utils/common';
-import type { ArraySplice, Paths, SetOptional, UnionToTuple } from 'type-fest';
+import type { EntryValuesAsTuple, ExtractKeys } from '#src/utils/common';
+import type { ArraySplice, SetOptional, UnionToTuple } from 'type-fest';
 
 type UnwrapValue<T> = UnwrapPermutation<UnwrapPermutationGenerator<CastAsPermutationGenerator<T>>>;
 type At<A, K extends PropertyKey> = A extends readonly unknown[]
@@ -69,8 +69,6 @@ export type UnwrapValidRecordInput<T extends ValidRecordInput> = {
 	[K in keyof T]: UnwrapValue<T[K]>;
 };
 
-export type Parse<T extends string> = T extends `${infer U extends number}` ? U : never;
-
 export type RecordOutputMapper<T extends ValidRecordInput> = T extends readonly unknown[]
 	? SetTupleOptional<
 			UnwrapValidRecordInput<T> extends infer U extends readonly unknown[] ? U : never,
@@ -92,17 +90,46 @@ export type SizeAccumulator<T extends ValidRecordInput> = MultiplyTuple<
 	CastAsNumericArray<EntryValuesAsTuple<SizeCalculator<T>>>
 >;
 
-export type StringifiedPaths<T extends ValidRecordInput> =
-	Paths<RecordOutputMapper<T>> extends infer U extends string ? U : never;
-
 export type RecordGenerator<T extends ValidRecordInput> = () => Iterable<RecordOutputMapper<T>>;
 
+type PrimitivePermutationPaths<T extends ValidRecordInput> = {
+	[K in ExtractKeys<T>]: CastAsPermutationGenerator<
+		T[K]
+	>['primitivePermutationPaths'][number] extends never
+		? `${K}`
+		: CastAsPermutationGenerator<
+					T[K]
+			  >['primitivePermutationPaths'][number] extends infer U extends string
+			? `${K}.${U}`
+			: never;
+} extends infer U extends Record<string, string>
+	? U[keyof U]
+	: never;
+
+type PermutationPaths<T extends ValidRecordInput> = {
+	[K in ExtractKeys<T>]: CastAsPermutationGenerator<
+		T[K]
+	>['permutationPaths'][number] extends never
+		? `${K}`
+		: CastAsPermutationGenerator<T[K]>['permutationPaths'][number] extends infer U extends
+					string
+			? `${K}` | `${K}.${U}`
+			: never;
+} extends infer U extends Record<string, string>
+	? U[keyof U]
+	: never;
+
+/**
+ * Function param super-typing is another restriction in extended interfaces which is not in type intersections
+ */
 export interface RecordPatch<T extends ValidRecordInput> extends PermutationPatch {
 	readonly size: SizeAccumulator<T>;
 	readonly originalInputArg: T;
 	readonly type: 'record';
 	readonly modifiers: readonly never[];
 	readonly structure: T extends readonly unknown[] ? 'array' : 'pojo';
+	readonly permutationPaths: readonly PermutationPaths<T>[];
+	readonly primitivePermutationPaths: readonly PrimitivePermutationPaths<T>[];
 }
 
 export interface MyRecord<T extends ValidRecordInput = ValidRecordInput>
