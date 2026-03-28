@@ -7,7 +7,7 @@ import type {
 import type { MultiplyTuple } from '#src/utils/arithmetic/multiply';
 import type { Sum } from '#src/utils/arithmetic/sum';
 import type { CastAsNumericArray, CastAsPermutationGenerator } from '#src/utils/casting';
-import type { EntryValuesAsTuple, ExtractKeys } from '#src/utils/common';
+import type { EntryValuesAsTuple, ExtractKeys, Stringify } from '#src/utils/common';
 import type { ArraySplice, SetOptional, UnionToTuple } from 'type-fest';
 
 type UnwrapValue<T> = UnwrapPermutation<UnwrapPermutationGenerator<CastAsPermutationGenerator<T>>>;
@@ -92,7 +92,7 @@ export type SizeAccumulator<T extends ValidRecordInput> = MultiplyTuple<
 
 export type RecordGenerator<T extends ValidRecordInput> = () => Iterable<RecordOutputMapper<T>>;
 
-type PrimitivePermutationPaths<T extends ValidRecordInput> = {
+export type RecordPrimitivePermutationPaths<T extends ValidRecordInput> = {
 	[K in ExtractKeys<T>]: CastAsPermutationGenerator<
 		T[K]
 	>['primitivePermutationPaths'][number] extends never
@@ -103,10 +103,12 @@ type PrimitivePermutationPaths<T extends ValidRecordInput> = {
 			? `${K}.${U}`
 			: never;
 } extends infer U extends Record<string, string>
-	? U[keyof U]
+	? keyof U extends never
+		? string
+		: Stringify<U[keyof U]>
 	: never;
 
-type PermutationPaths<T extends ValidRecordInput> = {
+export type RecordPermutationPaths<T extends ValidRecordInput> = {
 	[K in ExtractKeys<T>]: CastAsPermutationGenerator<
 		T[K]
 	>['permutationPaths'][number] extends never
@@ -116,11 +118,13 @@ type PermutationPaths<T extends ValidRecordInput> = {
 			? `${K}` | `${K}.${U}`
 			: never;
 } extends infer U extends Record<string, string>
-	? U[keyof U]
+	? keyof U extends never
+		? string
+		: Stringify<U[keyof U]>
 	: never;
 
 /**
- * Function param super-typing is another restriction in extended interfaces which is not in type intersections
+ * NOTE: Function param super-typing is another restriction in extended interfaces which is not in type intersections
  */
 export interface RecordPatch<T extends ValidRecordInput> extends PermutationPatch {
 	readonly size: SizeAccumulator<T>;
@@ -128,8 +132,8 @@ export interface RecordPatch<T extends ValidRecordInput> extends PermutationPatc
 	readonly type: 'record';
 	readonly modifiers: readonly never[];
 	readonly structure: T extends readonly unknown[] ? 'array' : 'pojo';
-	readonly permutationPaths: readonly PermutationPaths<T>[];
-	readonly primitivePermutationPaths: readonly PrimitivePermutationPaths<T>[];
+	readonly permutationPaths: readonly RecordPermutationPaths<T>[];
+	readonly primitivePermutationPaths: readonly RecordPrimitivePermutationPaths<T>[];
 }
 
 export interface MyRecord<T extends ValidRecordInput = ValidRecordInput>

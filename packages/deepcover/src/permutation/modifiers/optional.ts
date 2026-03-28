@@ -21,7 +21,7 @@ export function optional<const T extends PermutationGenerator>(input: T): Option
 				return modifiers;
 			},
 			get originalInputArg() {
-				return input.originalInputArg as T;
+				return input.originalInputArg;
 			},
 			get type() {
 				return input.type;

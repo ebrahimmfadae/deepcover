@@ -1,39 +1,16 @@
 import type { PermutationGenerator } from '#src/permutation/definitions';
-import { clean, isClean } from '#src/permutation/modifiers/clean';
+import { isClean } from '#src/permutation/modifiers/clean';
 import { isOptional, optional } from '#src/permutation/modifiers/optional';
 import { each } from '#src/permutation/primitive/each';
-import type { Series, SeriesPatch, SeriesSize } from '#src/permutation/primitive/series.types';
+import type {
+	Series,
+	SeriesPatch,
+	SeriesPermutationPaths,
+	SeriesSize,
+} from '#src/permutation/primitive/series.types';
 import { explicitPermutations } from '#src/permutation/pure/explicit-permutations';
 import { allPathLevels, merge } from '#src/permutation/utils';
 import { hasKey } from '#src/utils/entries';
-
-function flattenValues(a: readonly PermutationGenerator[]): readonly PermutationGenerator[] {
-	return a.flatMap((v) => (isSeries(v) ? flattenValues(v.originalInputArg) : v));
-}
-
-export function mergeSeries(a: Series, b: Series): Series {
-	const grouped1 = Object.groupBy(a.originalInputArg, (v) => v.structure);
-	const grouped2 = Object.groupBy(b.originalInputArg, (v) => v.structure);
-	const includesNotMergeable =
-		isOptional(a) ||
-		a.originalInputArg.some(
-			(v) =>
-				v.structure === 'primitive' ||
-				b.originalInputArg.some((u) => u.structure !== v.structure),
-		);
-	const rPojo =
-		grouped1.pojo && grouped2.pojo
-			? explicitPermutations([grouped1.pojo, grouped2.pojo]).map((v) => v[0].override(v[1]))
-			: (grouped2.pojo ?? []);
-	const rArray =
-		grouped1.array && grouped2.array
-			? explicitPermutations([grouped1.array, grouped2.array]).map((v) => v[0].override(v[1]))
-			: (grouped2.array ?? []);
-	const s = series(...rPojo, ...rArray, ...(grouped2.primitive ?? []));
-	const res0 = includesNotMergeable ? series(s, clean(b)) : s;
-	const res = isOptional(b) ? optional(res0) : res0;
-	return res as Series;
-}
 
 export function series<const T extends readonly PermutationGenerator[]>(...values: T): Series<T> {
 	if (values.some((v) => !isClean(v)))
@@ -71,7 +48,7 @@ export function series<const T extends readonly PermutationGenerator[]>(...value
 						return u.map((w) => `#${v[0]}.${w}`);
 					})
 					.flatMap((v) => allPathLevels(v));
-				return [...new Set(pathLevels)];
+				return [...new Set(pathLevels)] as SeriesPermutationPaths<T>[];
 			},
 			get primitivePermutationPaths() {
 				return this.permutationPaths.filter(
@@ -116,4 +93,67 @@ export function series<const T extends readonly PermutationGenerator[]>(...value
 
 export function isSeries(v: PermutationGenerator): v is Series {
 	return v.type === 'series';
+}
+
+// TODO: Permutation Generators with modifiers (e.g. optional) are not assignable to raw type. it should be fixed
+
+/**
+ * 1. All primitives in `a` should be overridden by `b` completely
+ * 2. All expandable-s in `a` should be merged with `b` of the same structure
+ * 3. Standalone expandable-s should be included separately
+ *
+ * NOTE: A `series` will never have a direct `mixed` item
+ */
+export function mergeSeries(a: Series, b: Series): Series {
+	const aStructures = a.originalInputArg.map((v) => v.structure);
+	if (aStructures.every((v) => v === 'primitive')) return b;
+	const bStructures = b.originalInputArg.map((v) => v.structure);
+	if (bStructures.every((v) => v === 'primitive')) return b;
+	const grouped1 = Object.groupBy(a.originalInputArg, (v) => v.structure);
+	const grouped2 = Object.groupBy(b.originalInputArg, (v) => v.structure);
+	const pojos =
+		grouped1.pojo && grouped2.pojo
+			? getCombined(explicitPermutations([grouped1.pojo, grouped2.pojo])).toArray()
+			: [];
+	const arrays =
+		grouped1.array && grouped2.array
+			? getCombined(explicitPermutations([grouped1.array, grouped2.array])).toArray()
+			: [];
+	const aHasPrimitive = isOptional(a) || aStructures.some((v) => v === 'primitive');
+	const aHasArray = !!grouped1.array?.length;
+	const aHasPojo = !!grouped1.pojo?.length;
+	const replaceArrays =
+		aHasPrimitive || aHasPojo ? getReplaced(grouped1.array, grouped2.array) : [];
+	const replacePojos =
+		aHasPrimitive || aHasArray ? getReplaced(grouped1.pojo, grouped2.pojo) : [];
+	const prefix = [replaceArrays, replacePojos];
+	const s = series(...prefix.flat(), ...pojos, ...arrays, ...(grouped2.primitive ?? []));
+	const res = isOptional(b) ? optional(s) : s;
+	return res as Series;
+}
+
+function flattenValues(a: readonly PermutationGenerator[]): readonly PermutationGenerator[] {
+	return a.flatMap((v) => (isSeries(v) ? flattenValues(v.originalInputArg) : v));
+}
+
+function aIsSubsetOfB(a: PermutationGenerator, b: PermutationGenerator): boolean {
+	const regex = /\.?#\d+/g;
+	const a0 = new Set(a.primitivePermutationPaths.map((u) => u.replace(regex, '')));
+	const b0 = new Set(b.primitivePermutationPaths.map((u) => u.replace(regex, '')));
+	return a0.isSubsetOf(b0);
+}
+
+function getCombined(
+	a: IteratorObject<readonly [PermutationGenerator, PermutationGenerator]>,
+): IteratorObject<PermutationGenerator> {
+	return a.filter((v) => !aIsSubsetOfB(v[0], v[1])).map((v) => v[0].override(v[1]));
+}
+
+function getReplaced(
+	a?: readonly PermutationGenerator[],
+	b?: readonly PermutationGenerator[],
+): readonly PermutationGenerator[] {
+	if (a && b) return b.filter((v) => a.every((u) => aIsSubsetOfB(u, v)));
+	if (!a && b) return b;
+	return [];
 }

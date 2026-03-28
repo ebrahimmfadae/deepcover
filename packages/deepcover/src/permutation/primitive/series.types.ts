@@ -22,7 +22,7 @@ export type SizeTuple<out T extends readonly PermutationGenerator[]> = Readonly<
 export type SeriesSize<T extends readonly PermutationGenerator[]> =
 	readonly PermutationGenerator[] extends T ? bigint : SumTuple<SizeTuple<T>>;
 
-type PrimitivePermutationPaths<T extends readonly PermutationGenerator[]> = {
+export type SeriesPrimitivePermutationPaths<T extends readonly PermutationGenerator[]> = {
 	[K in ExtractKeys<T> & number]: CastAsPermutationGenerator<
 		T[K]
 	>['primitivePermutationPaths'][number] extends never
@@ -33,10 +33,12 @@ type PrimitivePermutationPaths<T extends readonly PermutationGenerator[]> = {
 			? `#${K}.${U}`
 			: never;
 } extends infer U extends Record<string, string>
-	? Stringify<U[keyof U]>
+	? keyof U extends never
+		? string
+		: Stringify<U[keyof U]>
 	: never;
 
-type PermutationPaths<T extends readonly PermutationGenerator[]> = {
+export type SeriesPermutationPaths<T extends readonly PermutationGenerator[]> = {
 	[K in ExtractKeys<T> & number]: CastAsPermutationGenerator<
 		T[K]
 	>['permutationPaths'][number] extends never
@@ -46,7 +48,9 @@ type PermutationPaths<T extends readonly PermutationGenerator[]> = {
 			? `#${K}` | `#${K}.${U}`
 			: never;
 } extends infer U extends Record<string, string>
-	? Stringify<U[keyof U]>
+	? keyof U extends never
+		? string
+		: Stringify<U[keyof U]>
 	: never;
 
 export interface SeriesPatch<T extends readonly PermutationGenerator[]> extends PermutationPatch {
@@ -55,8 +59,8 @@ export interface SeriesPatch<T extends readonly PermutationGenerator[]> extends 
 	readonly originalInputArg: readonly PermutationGenerator[];
 	readonly type: 'series';
 	readonly structure: Structure;
-	readonly permutationPaths: readonly PermutationPaths<T>[];
-	readonly primitivePermutationPaths: readonly PrimitivePermutationPaths<T>[];
+	readonly permutationPaths: readonly SeriesPermutationPaths<T>[];
+	readonly primitivePermutationPaths: readonly SeriesPrimitivePermutationPaths<T>[];
 }
 
 /**

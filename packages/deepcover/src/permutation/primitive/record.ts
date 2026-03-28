@@ -5,6 +5,7 @@ import { each } from '#src/permutation/primitive/each';
 import type {
 	MyRecord,
 	RecordPatch,
+	RecordPermutationPaths,
 	SizeAccumulator,
 	ValidRecordInput,
 } from '#src/permutation/primitive/record.types';
@@ -15,35 +16,6 @@ import { REMOVE } from '#src/permutation/symbols';
 import { allPathLevels, merge } from '#src/permutation/utils';
 import { hasKey } from '#src/utils/entries';
 import { isExpandableArray } from '#src/utils/expandable-check';
-
-export function mergeRecord(a: MyRecord, b: MyRecord): MyRecord {
-	if (isPojoRecord(a) && isPojoRecord(b)) {
-		const entries = Object.entries(a.originalInputArg).map(([k, u]) => {
-			if (hasKey(b.originalInputArg, k))
-				return [k, u.override(b.originalInputArg[k]!)] as const;
-			return [k, u] as const;
-		});
-		const overrode = {
-			...b.originalInputArg,
-			...Object.fromEntries(entries),
-		};
-		const res0 = isOptional(a) ? series(record(overrode), clean(b)) : record(overrode);
-		const res = isOptional(b) ? optional(res0) : res0;
-		return res as MyRecord;
-	}
-	if (isArrayRecord(a) && isArrayRecord(b)) {
-		const maxLength = Math.max(a.originalInputArg.length, b.originalInputArg.length);
-		const overrode = Array.from(new Array(maxLength), (_, i) => {
-			if (hasKey(a.originalInputArg, i) && hasKey(b.originalInputArg, i))
-				return a.originalInputArg[i]!.override(b.originalInputArg[i]!);
-			return (a.originalInputArg[i] ?? b.originalInputArg[i])!;
-		});
-		const res0 = isOptional(a) ? series(record(overrode), clean(b)) : record(overrode);
-		const res = isOptional(b) ? optional(res0) : res0;
-		return res as MyRecord;
-	}
-	return b;
-}
 
 export function record<const T extends ValidRecordInput>(input: T): MyRecord<T> {
 	const r = Object.entries(input).map(([k, v]): [string, PermutationGenerator] =>
@@ -94,12 +66,12 @@ export function record<const T extends ValidRecordInput>(input: T): MyRecord<T> 
 						return u.map((w) => `${v[0]}.${w}`);
 					})
 					.flatMap((v) => allPathLevels(v));
-				return [...new Set(pathLevels)] as readonly string[];
+				return [...new Set(pathLevels)] as RecordPermutationPaths<T>[];
 			},
 			get primitivePermutationPaths() {
 				return this.permutationPaths.filter(
 					(v) => this.generatorAt(v).structure === 'primitive',
-				) as readonly string[];
+				);
 			},
 			extract(paths) {
 				const extractedInputEntries = Object.entries(input).map(([k, v]) => {
@@ -161,4 +133,33 @@ export function isArrayRecord(
 ): v is MyRecord<readonly PermutationGenerator[]> {
 	if (!isRecord(v)) return false;
 	return v.structure === 'array';
+}
+
+export function mergeRecord(a: MyRecord, b: MyRecord): MyRecord {
+	if (isPojoRecord(a) && isPojoRecord(b)) {
+		const entries = Object.entries(a.originalInputArg).map(([k, u]) => {
+			if (hasKey(b.originalInputArg, k))
+				return [k, u.override(b.originalInputArg[k]!)] as const;
+			return [k, u] as const;
+		});
+		const overrode = {
+			...b.originalInputArg,
+			...Object.fromEntries(entries),
+		};
+		const res0 = isOptional(a) ? series(record(overrode), clean(b)) : record(overrode);
+		const res = isOptional(b) ? optional(res0) : res0;
+		return res as MyRecord;
+	}
+	if (isArrayRecord(a) && isArrayRecord(b)) {
+		const maxLength = Math.max(a.originalInputArg.length, b.originalInputArg.length);
+		const overrode = Array.from(new Array(maxLength), (_, i) => {
+			if (hasKey(a.originalInputArg, i) && hasKey(b.originalInputArg, i))
+				return a.originalInputArg[i]!.override(b.originalInputArg[i]!);
+			return (a.originalInputArg[i] ?? b.originalInputArg[i])!;
+		});
+		const res0 = isOptional(a) ? series(record(overrode), clean(b)) : record(overrode);
+		const res = isOptional(b) ? optional(res0) : res0;
+		return res as MyRecord;
+	}
+	return b;
 }

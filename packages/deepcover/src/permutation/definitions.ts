@@ -21,7 +21,18 @@ export interface PermutationPatch {
 	readonly exclude: (paths: readonly string[]) => PermutationGenerator;
 	readonly generatorAt: (path: string) => PermutationGenerator;
 	/**
-	 * The override function equals merge
+	 * It does not act as a function that merges permutation schemas.
+	 * It is equal to JS pure object merge after the permutations are generated.
+	 *
+	 * For example:
+	 *
+	 * 1. Two series are not concatenated, If there is a primitive generator in the `left`
+	 * 	value it is completely ignored replaced by `right` values.
+	 * 2. If there are two record fields with same path, the `right` one will replace `left` one.
+	 * 3. All expandable object outputs are merged as regular object.
+	 * 4. All not-mergeable values are replaced by `right` values. (primitive, not matching structures like pojo and array)
+	 * 5. In mixed scenarios, we always respect the rule of JS pure object merge
+	 *
 	 * TODO: Maybe alter is a better name
 	 */
 	readonly override: (v: PermutationGenerator) => PermutationGenerator;

@@ -19,9 +19,11 @@ export type AppendModifier<T extends readonly string[]> = 'optional' extends T[n
 export interface OptionalPatch<T extends PermutationGenerator> extends PermutationPatch {
 	readonly size: T['size'];
 	readonly modifiers: AppendModifier<T['modifiers']>;
-	readonly originalInputArg: T;
+	readonly originalInputArg: T['originalInputArg'];
 	readonly type: T['type'];
 	readonly structure: T['structure'];
+	readonly permutationPaths: T['permutationPaths'];
+	readonly primitivePermutationPaths: T['primitivePermutationPaths'];
 }
 
 export interface Optional<T extends PermutationGenerator = PermutationGenerator>
