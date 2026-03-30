@@ -1,9 +1,9 @@
 import type { PermutationGenerator } from '#src/permutation/definitions';
 import { clean } from '#src/permutation/modifiers/clean';
-import { each, isEach } from '#src/permutation/primitive/each';
+import { isEach } from '#src/permutation/primitive/each';
 import { isRecord, mergeRecord } from '#src/permutation/primitive/record';
+import { isSealed } from '#src/permutation/primitive/seal';
 import { isSeries, mergeSeries, series } from '#src/permutation/primitive/series';
-import { isSpace } from '#src/permutation/primitive/space';
 
 export function allPathLevels(path: string): string[] {
 	const splitted = path.split('.');
@@ -22,20 +22,15 @@ export function normalizedPaths(
  * Exception: If only `b` is optional, the `a` is also assumed optional.
  */
 export function merge(a: PermutationGenerator, b: PermutationGenerator): PermutationGenerator {
-	if (isSpace(a) && isSpace(b)) return each();
-	if (isSpace(a)) return b;
-	if (isSpace(b)) return a;
-
-	if (isEach(a) && isEach(b)) return b;
-	if (isEach(a) && isRecord(b)) return b;
-	if (isEach(a) && isSeries(b)) return b;
-
-	if (isRecord(a) && isEach(b)) return b;
-	if (isRecord(a) && isRecord(b)) return mergeRecord(a, b);
-	if (isRecord(a) && isSeries(b)) return mergeSeries(series(clean(a)), b);
-
-	if (isSeries(a) && isEach(b)) return mergeSeries(a, series(clean(b)));
-	if (isSeries(a) && isRecord(b)) return mergeSeries(a, series(clean(b)));
-	if (isSeries(a) && isSeries(b)) return mergeSeries(a, b);
-	return b;
+	// TODO: Merging optional permutations is not handled very well
+	if (isEach(a) || isEach(b) || isSealed(a) || isSealed(b)) return b;
+	if (isRecord(a)) {
+		if (isRecord(b)) return mergeRecord(a, b);
+		if (isSeries(b)) return mergeSeries(series(clean(a)), b);
+	}
+	if (isSeries(a)) {
+		if (isRecord(b)) return mergeSeries(a, series(clean(b)));
+		if (isSeries(b)) return mergeSeries(a, b);
+	}
+	throw new Error('Illegal state: Unhandled merge');
 }

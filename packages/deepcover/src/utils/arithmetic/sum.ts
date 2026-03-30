@@ -168,8 +168,13 @@ export type Sum<left extends bigint, right extends bigint> = bigint extends left
 		? n
 		: never;
 
-export type SumTuple<T extends readonly bigint[], N extends bigint = 0n> = readonly [] extends T
-	? 0n
-	: T extends readonly [infer Head extends bigint, ...infer U extends readonly bigint[]]
-		? SumTuple<U, Sum<Head, N>>
-		: N;
+export type SumTuple<
+	T extends readonly bigint[],
+	N extends bigint = 0n,
+> = readonly bigint[] extends T
+	? bigint
+	: readonly [] extends T
+		? 0n
+		: T extends readonly [infer Head extends bigint, ...infer U extends readonly bigint[]]
+			? SumTuple<U, Sum<Head, N>>
+			: N;

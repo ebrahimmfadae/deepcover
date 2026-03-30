@@ -10,12 +10,14 @@ import type {
 	ValidRecordInput,
 } from '#src/permutation/primitive/record.types';
 import { series } from '#src/permutation/primitive/series';
-import { space } from '#src/permutation/primitive/space';
 import { explicitPermutations } from '#src/permutation/pure/explicit-permutations';
 import { REMOVE } from '#src/permutation/symbols';
 import { allPathLevels, merge } from '#src/permutation/utils';
 import { hasKey } from '#src/utils/entries';
 import { isExpandableArray } from '#src/utils/expandable-check';
+
+// TODO: Empty spaces in array/pojo structure should not be included in paths.
+//			Also the should be ignored from series
 
 export function record<const T extends ValidRecordInput>(input: T): MyRecord<T> {
 	const r = Object.entries(input).map(([k, v]): [string, PermutationGenerator] =>
@@ -73,10 +75,14 @@ export function record<const T extends ValidRecordInput>(input: T): MyRecord<T> 
 					(v) => this.generatorAt(v).structure === 'primitive',
 				);
 			},
-			extract(paths) {
+			extract(paths = []) {
+				if (paths.length === 0) return this.structure === 'pojo' ? record({}) : record([]);
+				const pathSet = new Set(paths as readonly RecordPermutationPaths<T>[]);
+				if (pathSet.intersection(new Set(this.permutationPaths)).size === 0)
+					return this.structure === 'pojo' ? record({}) : record([]);
 				const extractedInputEntries = Object.entries(input).map(([k, v]) => {
 					const filteredPaths = paths.filter((u) => u.startsWith(k));
-					if (filteredPaths.length === 0) return [k, space()];
+					if (filteredPaths.length === 0) return [k, each()];
 					if (filteredPaths.length === 1 && filteredPaths.includes(k)) return [k, v];
 					const shiftPaths = filteredPaths.map((u) => u.replace(`${k}.`, ''));
 					return [k, v.extract(shiftPaths)];
@@ -86,11 +92,14 @@ export function record<const T extends ValidRecordInput>(input: T): MyRecord<T> 
 					: Object.fromEntries(extractedInputEntries);
 				return record(extractedInput);
 			},
-			exclude(paths) {
+			exclude(paths = []) {
+				if (paths.length === 0) return this;
+				const pathSet = new Set(paths as readonly RecordPermutationPaths<T>[]);
+				if (pathSet.intersection(new Set(this.permutationPaths)).size === 0) return this;
 				const extractedInputEntries = Object.entries(input).map(([k, v]) => {
 					const filteredPaths = paths.filter((u) => u.startsWith(k));
 					if (filteredPaths.length === 0) return [k, v];
-					if (filteredPaths.includes(k)) return [k, space()];
+					if (filteredPaths.includes(k)) return [k, each()];
 					const shiftPaths = filteredPaths.map((u) => u.replace(`${k}.`, ''));
 					return [k, v.exclude(shiftPaths)];
 				});
@@ -100,6 +109,9 @@ export function record<const T extends ValidRecordInput>(input: T): MyRecord<T> 
 				return record(extractedInput);
 			},
 			generatorAt(path) {
+				if (path === undefined) return each();
+				if (!this.permutationPaths.includes(path as RecordPermutationPaths<T>))
+					return each();
 				const [splitted, ...rest] = path?.split('.') ?? [];
 				if (!path || !hasKey(input, splitted)) return each();
 				const v = input[splitted] as PermutationGenerator;

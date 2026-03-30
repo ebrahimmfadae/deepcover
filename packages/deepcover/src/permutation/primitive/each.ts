@@ -30,14 +30,16 @@ export function each<const T extends readonly unknown[]>(...values: T): Each<T> 
 			get primitivePermutationPaths() {
 				return [] as readonly [];
 			},
-			extract(paths) {
-				return paths.length > 0 ? each() : each(...values);
+			extract() {
+				if (this.size === 0n) return this;
+				return each();
 			},
-			exclude(paths) {
-				return paths.length > 0 ? each(...values) : each();
+			exclude() {
+				return this;
 			},
 			generatorAt() {
-				return each(...values);
+				if (this.size === 0n) return this;
+				return each();
 			},
 			override(v) {
 				return merge(this, v);

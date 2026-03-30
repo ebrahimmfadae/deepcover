@@ -66,8 +66,10 @@ export type Multiply<A extends bigint, B extends bigint> = bigint extends A | B
 export type MultiplyTuple<
 	T extends readonly bigint[],
 	N extends bigint = 1n,
-> = readonly [] extends T
-	? 1n
-	: T extends readonly [infer Head extends bigint, ...infer U extends readonly bigint[]]
-		? MultiplyTuple<U, Multiply<Head, N>>
-		: N;
+> = readonly bigint[] extends T
+	? bigint
+	: readonly [] extends T
+		? 1n
+		: T extends readonly [infer Head extends bigint, ...infer U extends readonly bigint[]]
+			? MultiplyTuple<U, Multiply<Head, N>>
+			: N;

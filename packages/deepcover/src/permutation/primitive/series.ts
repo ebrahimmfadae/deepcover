@@ -12,6 +12,7 @@ import { explicitPermutations } from '#src/permutation/pure/explicit-permutation
 import { allPathLevels, merge } from '#src/permutation/utils';
 import { hasKey } from '#src/utils/entries';
 
+// TODO: Empty permutations (e.g. each()) are not handled
 export function series<const T extends readonly PermutationGenerator[]>(...values: T): Series<T> {
 	if (values.some((v) => !isClean(v)))
 		throw new Error(`A 'series' can't have components with direct modifiers.`);
@@ -55,7 +56,10 @@ export function series<const T extends readonly PermutationGenerator[]>(...value
 					(v) => this.generatorAt(v).structure === 'primitive',
 				);
 			},
-			extract(paths) {
+			extract(paths = []) {
+				if (paths.length === 0) return each();
+				const pathSet = new Set(paths as readonly SeriesPermutationPaths<T>[]);
+				if (pathSet.intersection(new Set(this.permutationPaths)).size === 0) return each();
 				const extractedValues = Object.entries(flatValues).map(([k, v]) => {
 					const k2 = `#${k}`;
 					const filteredPaths = paths.filter((u) => u.startsWith(k2));
@@ -66,7 +70,10 @@ export function series<const T extends readonly PermutationGenerator[]>(...value
 				});
 				return series(...extractedValues);
 			},
-			exclude(paths) {
+			exclude(paths = []) {
+				if (paths.length === 0) return this;
+				const pathSet = new Set(paths as readonly SeriesPermutationPaths<T>[]);
+				if (pathSet.intersection(new Set(this.permutationPaths)).size === 0) return this;
 				const extractedValues = Object.entries(flatValues).map(([k, v]) => {
 					const k2 = `#${k}`;
 					const filteredPaths = paths.filter((u) => u.startsWith(k2));
@@ -78,6 +85,9 @@ export function series<const T extends readonly PermutationGenerator[]>(...value
 				return series(...extractedValues);
 			},
 			generatorAt(path) {
+				if (path === undefined) return each();
+				if (!this.permutationPaths.includes(path as SeriesPermutationPaths<T>))
+					return each();
 				const [splitted, ...rest] = path?.split('.').map((v) => v.replace('#', '')) ?? [];
 				if (!path || !hasKey(flatValues, splitted)) return each();
 				const v = flatValues[splitted] as PermutationGenerator;
@@ -104,6 +114,7 @@ export function isSeries(v: PermutationGenerator): v is Series {
  *
  * NOTE: A `series` will never have a direct `mixed` item
  */
+// TODO: There is a serious issue with nested permutation merging, there will be duplication if nested object is also going to be merged
 export function mergeSeries(a: Series, b: Series): Series {
 	const aStructures = a.originalInputArg.map((v) => v.structure);
 	if (aStructures.every((v) => v === 'primitive')) return b;

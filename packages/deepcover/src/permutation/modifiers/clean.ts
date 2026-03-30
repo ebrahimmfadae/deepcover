@@ -15,7 +15,7 @@ export function clean<const T extends PermutationGenerator>(input: T): Clean<T> 
 				return [] as readonly never[];
 			},
 			get originalInputArg() {
-				return input.originalInputArg as T;
+				return input.originalInputArg;
 			},
 			get type() {
 				return input.type;

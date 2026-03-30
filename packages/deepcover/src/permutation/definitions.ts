@@ -1,3 +1,6 @@
+// TODO: One typing issue is that for example Optional<Series> is not assignable to Series
+// 		Second is that functions in PermutationPatch are not type-safe
+
 export type Structure = 'array' | 'pojo' | 'mixed' | 'primitive';
 export type Permutation<T = unknown> = Iterable<T>;
 export type InferPermutationType<T extends PermutationGenerator> = UnwrapPermutation<
@@ -17,9 +20,9 @@ export interface PermutationPatch {
 	readonly modifiers: readonly string[];
 	readonly permutationPaths: readonly string[];
 	readonly primitivePermutationPaths: readonly string[];
-	readonly extract: (paths: readonly string[]) => PermutationGenerator;
-	readonly exclude: (paths: readonly string[]) => PermutationGenerator;
-	readonly generatorAt: (path: string) => PermutationGenerator;
+	readonly extract: (paths?: readonly string[]) => PermutationGenerator;
+	readonly exclude: (paths?: readonly string[]) => PermutationGenerator;
+	readonly generatorAt: (path?: string) => PermutationGenerator;
 	/**
 	 * It does not act as a function that merges permutation schemas.
 	 * It is equal to JS pure object merge after the permutations are generated.
