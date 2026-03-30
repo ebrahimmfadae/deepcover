@@ -4,6 +4,7 @@
   "description": "",
   "type": "module",
   "scripts": {
+    "test": "vitest --watch",
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit"
   },

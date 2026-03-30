@@ -6,7 +6,6 @@
   "private": true,
   "scripts": {
     "start": "node --import @swc-node/register/esm-register",
-    "test": "vitest --watch",
     "lint": "eslint \"packages/**/{src,apps,libs,test}/**/*.ts\" --fix",
     "eslint:inspect": "npx @eslint/config-inspector"
   },
