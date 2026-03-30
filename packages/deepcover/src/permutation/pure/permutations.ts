@@ -11,9 +11,11 @@ export type PermutationsOptions = { readonly size: number; readonly exclusive?: 
 
 export type Permutations<T, U extends PermutationsOptions> = [T] extends [never]
 	? never
-	: 0 extends U['size']
-		? never
-		: Readonly<BuildTuple<T, U['size']>>;
+	: number extends U['size']
+		? T[]
+		: 0 extends U['size']
+			? never
+			: Readonly<BuildTuple<T, U['size']>>;
 
 export function* permutations<
 	const T,
@@ -32,9 +34,7 @@ export function* permutations<
 		yield* iterator.map((v) => [v]) as Iterable<Permutations<T, U>>;
 	} else {
 		const indexedInput = cachedIterable(iterableWithIndex(iterator));
-		const roller = Iterator.from(indexedInput)
-			.take(size + 1)
-			.toArray();
+		const roller = Iterator.from(indexedInput).toArray();
 		if (roller.length === 0 || (exclusive && roller.length < size)) return;
 		if (roller.length === 1 && !exclusive)
 			yield new Array(size).fill(roller[0]![0]) as unknown as Permutations<T, U>;
@@ -53,9 +53,8 @@ export function* permutations<
 			if (output.length < size) return;
 			loop: while (true) {
 				if (
-					output.every((v, i) => i === 0 || v[1] >= output[i - 1]![1]) &&
-					(!exclusive ||
-						output.map((v) => v[1]).length === new Set(output.map((v) => v[1])).size)
+					!exclusive ||
+					output.map((v) => v[1]).length === new Set(output.map((v) => v[1])).size
 				)
 					yield output.map((v) => v[0]) as unknown as Permutations<T, U>;
 				for (let pivot = size - 1; pivot >= 0; pivot--) {
