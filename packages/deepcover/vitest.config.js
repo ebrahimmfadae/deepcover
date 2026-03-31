@@ -17,12 +17,15 @@ export default defineConfig({
 		slowTestThreshold: 0,
 		logHeapUsage: true,
 		open: false,
+		bail: 1,
 		include: ['**/*.{test,spec,bench}.?(c|m)[jt]s?(x)'],
 		typecheck: {
 			enabled: true,
 			include: ['**/*.{test-d,spec-d}.?(c|m)[jt]s?(x)'],
 		},
-		reporters: 'verbose',
+		reporters: 'default',
+		isolate: false,
+		pool: 'threads',
 	},
 	resolve: {
 		alias: {
