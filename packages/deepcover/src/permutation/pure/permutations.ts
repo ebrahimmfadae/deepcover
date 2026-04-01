@@ -29,8 +29,9 @@ export function* permutations<
 		exclusive = defaultPermutationsOptions.exclusive,
 	} = options ?? ({} as PermutationsOptions);
 	const iterator = Iterator.from(input);
-	if (size < 1) return;
-	if (size === 1) {
+	if (size < 0) return;
+	else if (size === 0) yield [] as unknown as Permutations<T, U>;
+	else if (size === 1) {
 		yield* iterator.map((v) => [v]) as Iterable<Permutations<T, U>>;
 	} else {
 		const indexedInput = cachedIterable(iterableWithIndex(iterator));
