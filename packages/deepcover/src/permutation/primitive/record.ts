@@ -9,6 +9,7 @@ import { series } from '#src/permutation/primitive/series';
 import { explicitPermutations } from '#src/permutation/pure/explicit-permutations';
 import { REMOVE } from '#src/permutation/symbols';
 import { allPathLevels, merge } from '#src/permutation/utils';
+import type { Loose } from '#src/utils/common';
 import { hasKey } from '#src/utils/entries';
 import {
 	isExpandableArray,
@@ -49,7 +50,7 @@ export function isArrayRecord(v: PermutationGenerator): v is RecordArray {
 	return isRecord(v) && v.structure === 'array';
 }
 
-export function mergeRecord(a: MyRecord, b: MyRecord): MyRecord {
+export function mergeRecord(a: Loose<MyRecord>, b: Loose<MyRecord>): Loose<MyRecord> {
 	if (isPojoRecord(a) && isPojoRecord(b)) {
 		const entries = Object.entries(a.originalInputArg).map(([k, u]) => {
 			if (hasKey(b.originalInputArg, k))

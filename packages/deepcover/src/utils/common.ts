@@ -1,3 +1,4 @@
+import type { PermutationGenerator } from '#src/permutation/definitions';
 import type { Expandable, ExpandableArray } from '#src/utils/expandable-check';
 import type { UnionToTuple } from '#src/utils/union-utils';
 
@@ -65,3 +66,6 @@ export type ExtractKeys<T extends Expandable> =
 			? ExtractIndices<T> & keyof T
 			: never;
 export type Stringify<T extends Primitive> = T extends string ? T : `${T}`;
+export type Loose<T extends PermutationGenerator> = Omit<T, 'modifiers'> & {
+	readonly modifiers: readonly string[];
+};

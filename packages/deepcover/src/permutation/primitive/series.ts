@@ -10,6 +10,7 @@ import type {
 } from '#src/permutation/primitive/series.types';
 import { explicitPermutations } from '#src/permutation/pure/explicit-permutations';
 import { allPathLevels, merge } from '#src/permutation/utils';
+import type { Loose } from '#src/utils/common';
 
 // TODO: Empty permutations (e.g. each()) are not handled
 export function series<const T extends readonly PermutationGenerator[]>(...values: T): Series<T> {
@@ -102,8 +103,6 @@ export function isSeries(v: PermutationGenerator): v is Series {
 	return v.type === 'series';
 }
 
-// TODO: Permutation Generators with modifiers (e.g. optional) are not assignable to raw type. it should be fixed
-
 /**
  * 1. All primitives in `a` should be overridden by `b` completely
  * 2. All expandable-s in `a` should be merged with `b` of the same structure
@@ -112,7 +111,7 @@ export function isSeries(v: PermutationGenerator): v is Series {
  * NOTE: A `series` will never have a direct `mixed` item
  */
 // TODO: There is a serious issue with nested permutation merging, there will be duplication if nested object is also going to be merged
-export function mergeSeries(a: Series, b: Series): Series {
+export function mergeSeries(a: Loose<Series>, b: Loose<Series>): Loose<Series> {
 	const aStructures = a.originalInputArg.map((v) => v.structure);
 	if (aStructures.every((v) => v === 'primitive')) return b;
 	const bStructures = b.originalInputArg.map((v) => v.structure);
