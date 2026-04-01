@@ -1,14 +1,10 @@
-import type {
-	InferPermutationType,
-	PermutationGenerator,
-	PermutationPatch,
-} from '#src/permutation/definitions';
+import type { InferPermutationType, PermutationGenerator } from '#src/permutation/definitions';
 
-export type CleanGenerator<out T extends PermutationGenerator> = () => Iterable<
-	InferPermutationType<T>
->;
-
-export interface CleanPatch<T extends PermutationGenerator> extends PermutationPatch {
+/**
+ * This type has no variance issues and can be an interface
+ */
+export interface Clean<out T extends PermutationGenerator = PermutationGenerator>
+	extends PermutationGenerator<InferPermutationType<T>> {
 	readonly size: T['size'];
 	readonly modifiers: readonly never[];
 	readonly originalInputArg: T['originalInputArg'];
@@ -17,7 +13,3 @@ export interface CleanPatch<T extends PermutationGenerator> extends PermutationP
 	readonly permutationPaths: T['permutationPaths'];
 	readonly primitivePermutationPaths: T['primitivePermutationPaths'];
 }
-
-export interface Clean<T extends PermutationGenerator = PermutationGenerator>
-	extends CleanGenerator<T>,
-		CleanPatch<T> {}

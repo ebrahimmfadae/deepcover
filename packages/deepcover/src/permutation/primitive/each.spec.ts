@@ -1,15 +1,16 @@
 import type { PermutationGenerator } from '#src/permutation/definitions';
 import { each } from '#src/permutation/primitive/each';
+import { isNever, never } from '#src/permutation/primitive/never';
 import { cachedIterable } from '#src/permutation/pure/cached-iterable';
 import { permutations } from '#src/permutation/pure/permutations';
 
 const truthy = [true, 1, 'value', {}, [], Symbol('symbol')] as const;
 const falsy = [false, 0, '', undefined, null] as const;
 const values = truthy.concat(falsy);
-const inputs = cachedIterable(permutations(values, { size: 2, exclusive: true }));
+const inputs = cachedIterable(permutations(values, { size: 1 }));
 
 describe('Permutation', () => {
-	test('each()', () => assertGenerator(each()));
+	test(`each()`, () => assertNever(each()));
 	for (const e of inputs) {
 		const args = serializeArgs(e);
 		test(`each(${args})`, () => assertGenerator(each(...e), e));
@@ -19,9 +20,9 @@ describe('Permutation', () => {
 describe('Extract', () => {
 	for (const e of inputs) {
 		const args = serializeArgs(e);
-		test(`each(${args}).extract()`, () => assertGenerator(each(...e).extract()));
-		test(`each(${args}).extract([])`, () => assertGenerator(each(...e).extract([])));
-		test(`each(${args}).extract(['a'])`, () => assertGenerator(each(...e).extract(['a'])));
+		test(`each(${args}).extract()`, () => assertNever(each(...e).extract()));
+		test(`each(${args}).extract([])`, () => assertNever(each(...e).extract([])));
+		test(`each(${args}).extract(['a'])`, () => assertNever(each(...e).extract(['a'])));
 	}
 });
 
@@ -37,22 +38,18 @@ describe('Exclude', () => {
 describe('GeneratorAt', () => {
 	for (const e of inputs) {
 		const args = serializeArgs(e);
-		test(`each(${args}).generatorAt()`, () => assertGenerator(each(...e).generatorAt()));
-		test(`each(${args}).generatorAt('')`, () => assertGenerator(each(...e).generatorAt('')));
-		test(`each(${args}).generatorAt('a')`, () => assertGenerator(each(...e).generatorAt('a')));
+		test(`each(${args}).generatorAt()`, () => assertNever(each(...e).generatorAt()));
+		test(`each(${args}).generatorAt('')`, () => assertNever(each(...e).generatorAt('')));
+		test(`each(${args}).generatorAt('a')`, () => assertNever(each(...e).generatorAt('a')));
 	}
 });
 
 describe('Override', () => {
-	test(`each().override(each())`, () => {
-		const o = each().override(each());
-		assertGenerator(o);
-	});
 	for (const e0 of inputs) {
 		const args0 = serializeArgs(e0);
-		test(`each(${args0}).override(each())`, () => {
-			const o = each(...e0).override(each());
-			assertGenerator(o);
+		test(`each(${args0}).override(never())`, () => {
+			const o = each(...e0).override(never());
+			assertNever(o);
 		});
 		for (const e1 of inputs) {
 			const args1 = serializeArgs(e1);
@@ -64,8 +61,8 @@ describe('Override', () => {
 	}
 });
 
-function assertGenerator(v: PermutationGenerator, input: readonly unknown[] = []) {
-	expect(new Set(v())).toStrictEqual(new Set(input));
+function assertGenerator(v: PermutationGenerator, input: readonly unknown[]) {
+	expect(new Set(v)).toStrictEqual(new Set(input));
 	expect(v.size).toBe(BigInt(input.length));
 	expect(v.permutationPaths).toStrictEqual([]);
 	expect(v.primitivePermutationPaths).toStrictEqual([]);
@@ -73,6 +70,10 @@ function assertGenerator(v: PermutationGenerator, input: readonly unknown[] = []
 	expect(v.structure).toBe('primitive');
 	expect(v.modifiers).toStrictEqual([]);
 	expect(v.originalInputArg).toStrictEqual(input);
+}
+
+function assertNever(v: PermutationGenerator) {
+	expect(isNever(v)).toBe(true);
 }
 
 function serializeArgs(e: readonly unknown[]) {

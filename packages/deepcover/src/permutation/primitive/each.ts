@@ -1,51 +1,51 @@
 import type { PermutationGenerator } from '#src/permutation/definitions';
-import type { Each, EachPatch } from '#src/permutation/primitive/each.types';
+import type { Each } from '#src/permutation/primitive/each.types';
+import { never } from '#src/permutation/primitive/never';
+import type { Never } from '#src/permutation/primitive/never.types';
 import { merge } from '#src/permutation/utils';
-import type { Length } from '#src/utils/common';
 
-export function each<const T extends readonly unknown[]>(...values: T): Each<T> {
-	return Object.assign(
-		function* () {
+export function each(): Never;
+export function each<const T extends readonly unknown[]>(...values: T): Each<T>;
+export function each(...values: readonly unknown[]): Each | Never {
+	if (values.length === 0) return never();
+	return Object.assign(Object.create(null), {
+		*[Symbol.iterator]() {
 			yield* values;
 		},
-		{
-			get size() {
-				return BigInt(values.length) as Length<T>;
-			},
-			get modifiers() {
-				return [] as readonly never[];
-			},
-			get originalInputArg() {
-				return values;
-			},
-			get type() {
-				return 'each' as const;
-			},
-			get structure() {
-				return 'primitive' as const;
-			},
-			get permutationPaths() {
-				return [] as readonly [];
-			},
-			get primitivePermutationPaths() {
-				return [] as readonly [];
-			},
-			extract() {
-				if (this.size === 0n) return this;
-				return each();
-			},
-			exclude() {
-				return this;
-			},
-			generatorAt() {
-				if (this.size === 0n) return this;
-				return each();
-			},
-			override(v) {
-				return merge(this, v);
-			},
-		} satisfies EachPatch<T> & ThisType<Each<T>>,
-	);
+		get size() {
+			return BigInt(values.length);
+		},
+		get modifiers() {
+			return [] as readonly never[];
+		},
+		get originalInputArg() {
+			return values;
+		},
+		get type() {
+			return 'each' as const;
+		},
+		get structure() {
+			return 'primitive' as const;
+		},
+		get permutationPaths() {
+			return [] as readonly [];
+		},
+		get primitivePermutationPaths() {
+			return [] as readonly [];
+		},
+		extract() {
+			return never();
+		},
+		exclude() {
+			return this;
+		},
+		generatorAt() {
+			return never();
+		},
+		override(v) {
+			return merge(this, v);
+		},
+	} satisfies Each);
 }
 
 export function isEach(v: PermutationGenerator): v is Each {

@@ -1,13 +1,10 @@
 import type { PermutationGenerator } from '#src/permutation/definitions';
-import type { Length } from '#src/utils/common';
 
-export type Each<T extends readonly unknown[] = readonly unknown[]> = PermutationGenerator<
-	T[number]
-> & {
-	readonly size: Length<T>;
+export type Never = PermutationGenerator<never> & {
+	readonly size: 0n;
 	readonly modifiers: readonly never[];
-	readonly originalInputArg: T;
-	readonly type: 'each';
+	readonly originalInputArg: readonly never[];
+	readonly type: 'never';
 	readonly structure: 'primitive';
 	readonly permutationPaths: readonly [];
 	readonly primitivePermutationPaths: readonly [];

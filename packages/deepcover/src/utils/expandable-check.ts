@@ -1,8 +1,8 @@
-export type ExpandableArray = readonly unknown[];
-export type ExpandableObject = Readonly<Record<string, unknown>>;
+export type ExpandableArray<T = unknown> = readonly T[];
+export type ExpandableObject<T = unknown> = Readonly<Record<string, T>>;
 export type IsExpandableArray<T> = T extends ExpandableArray ? true : false;
 export type IsExpandableObject<T> = T extends ExpandableObject ? true : false;
-export type Expandable = ExpandableObject | ExpandableArray;
+export type Expandable<T = unknown> = ExpandableObject<T> | ExpandableArray<T>;
 export type IsExpandable<T> = T extends Expandable ? true : false;
 export type AsExpandable<T> = T extends Expandable ? T : never;
 

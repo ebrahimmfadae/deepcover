@@ -1,16 +1,15 @@
-import type { PermutationGenerator } from '#src/permutation/definitions';
+import type { InferPermutationType, PermutationGenerator } from '#src/permutation/definitions';
 import { isClean } from '#src/permutation/modifiers/clean';
 import { isOptional, optional } from '#src/permutation/modifiers/optional';
 import { each } from '#src/permutation/primitive/each';
 import type {
 	Series,
-	SeriesPatch,
 	SeriesPermutationPaths,
+	SeriesPrimitivePermutationPaths,
 	SeriesSize,
 } from '#src/permutation/primitive/series.types';
 import { explicitPermutations } from '#src/permutation/pure/explicit-permutations';
 import { allPathLevels, merge } from '#src/permutation/utils';
-import { hasKey } from '#src/utils/entries';
 
 // TODO: Empty permutations (e.g. each()) are not handled
 export function series<const T extends readonly PermutationGenerator[]>(...values: T): Series<T> {
@@ -20,85 +19,83 @@ export function series<const T extends readonly PermutationGenerator[]>(...value
 	const structures = new Set(flatValues.map((v) => v.structure));
 	const structure = structures.size === 1 ? structures.values().next().value! : 'mixed';
 	const size = flatValues.map((v) => v.size).reduce((prev, curr) => prev + curr, 0n);
-	return Object.assign(
-		function* () {
-			for (const element of flatValues) yield* element();
+	return Object.assign(Object.create(null), {
+		*[Symbol.iterator]() {
+			for (const element of flatValues)
+				yield* element as PermutationGenerator<InferPermutationType<T[number]>>;
 		},
-		{
-			get size() {
-				return size as SeriesSize<T>;
-			},
-			get modifiers() {
-				return [] as readonly never[];
-			},
-			get originalInputArg() {
-				return flatValues;
-			},
-			get type() {
-				return 'series' as const;
-			},
-			get structure() {
-				return structure;
-			},
-			get permutationPaths() {
-				const entries = Object.entries(flatValues);
-				const pathLevels = entries
-					.flatMap((v) => {
-						const u = v[1].permutationPaths;
-						if (u.length === 0) return [`#${v[0]}`];
-						return u.map((w) => `#${v[0]}.${w}`);
-					})
-					.flatMap((v) => allPathLevels(v));
-				return [...new Set(pathLevels)] as SeriesPermutationPaths<T>[];
-			},
-			get primitivePermutationPaths() {
-				return this.permutationPaths.filter(
-					(v) => this.generatorAt(v).structure === 'primitive',
-				);
-			},
-			extract(paths = []) {
-				if (paths.length === 0) return each();
-				const pathSet = new Set(paths as readonly SeriesPermutationPaths<T>[]);
-				if (pathSet.intersection(new Set(this.permutationPaths)).size === 0) return each();
-				const extractedValues = Object.entries(flatValues).map(([k, v]) => {
-					const k2 = `#${k}`;
-					const filteredPaths = paths.filter((u) => u.startsWith(k2));
-					if (filteredPaths.length === 0) return each();
-					if (filteredPaths.length === 1 && filteredPaths.includes(k2)) return v;
-					const shiftPaths = filteredPaths.map((u) => u.replace(`${k2}.`, ''));
-					return v.extract(shiftPaths);
-				});
-				return series(...extractedValues);
-			},
-			exclude(paths = []) {
-				if (paths.length === 0) return this;
-				const pathSet = new Set(paths as readonly SeriesPermutationPaths<T>[]);
-				if (pathSet.intersection(new Set(this.permutationPaths)).size === 0) return this;
-				const extractedValues = Object.entries(flatValues).map(([k, v]) => {
-					const k2 = `#${k}`;
-					const filteredPaths = paths.filter((u) => u.startsWith(k2));
-					if (filteredPaths.length === 0) return v;
-					if (filteredPaths.includes(k2)) return each();
-					const shiftPaths = filteredPaths.map((u) => u.replace(`${k2}.`, ''));
-					return v.extract(shiftPaths);
-				});
-				return series(...extractedValues);
-			},
-			generatorAt(path) {
-				if (path === undefined) return each();
-				if (!this.permutationPaths.includes(path as SeriesPermutationPaths<T>))
-					return each();
-				const [splitted, ...rest] = path?.split('.').map((v) => v.replace('#', '')) ?? [];
-				if (!path || !hasKey(flatValues, splitted)) return each();
-				const v = flatValues[splitted] as PermutationGenerator;
-				if (rest.length === 0) return v;
-				return v.generatorAt(rest.join('.'));
-			},
-			override(v) {
-				return merge(this, v);
-			},
-		} satisfies SeriesPatch<T> & ThisType<Series<T>>,
-	) as Series<T>;
+		get size() {
+			return size as SeriesSize<T>;
+		},
+		get modifiers() {
+			return [] as readonly never[];
+		},
+		get originalInputArg() {
+			return flatValues;
+		},
+		get type() {
+			return 'series' as const;
+		},
+		get structure() {
+			return structure;
+		},
+		get permutationPaths() {
+			const entries = Object.entries(flatValues);
+			const pathLevels = entries
+				.flatMap((v) => {
+					const u = v[1].permutationPaths;
+					if (u.length === 0) return [`#${v[0]}`];
+					return u.map((w) => `#${v[0]}.${w}`);
+				})
+				.flatMap((v) => allPathLevels(v));
+			return [...new Set(pathLevels)] as SeriesPermutationPaths<T>[];
+		},
+		get primitivePermutationPaths() {
+			return this.permutationPaths.filter(
+				(v) => this.generatorAt(v).structure === 'primitive',
+			) as SeriesPrimitivePermutationPaths<T>[];
+		},
+		extract(paths = []) {
+			if (paths.length === 0) return each();
+			const pathSet = new Set(paths as readonly SeriesPermutationPaths<T>[]);
+			if (pathSet.intersection(new Set(this.permutationPaths)).size === 0) return each();
+			const extractedValues = Object.entries(flatValues).map(([k, v]) => {
+				const k2 = `#${k}`;
+				const filteredPaths = paths.filter((u) => u.startsWith(k2));
+				if (filteredPaths.length === 0) return each();
+				if (filteredPaths.length === 1 && filteredPaths.includes(k2)) return v;
+				const shiftPaths = filteredPaths.map((u) => u.replace(`${k2}.`, ''));
+				return v.extract(shiftPaths);
+			});
+			return series(...extractedValues);
+		},
+		exclude(paths = []) {
+			if (paths.length === 0) return this;
+			const pathSet = new Set(paths as readonly SeriesPermutationPaths<T>[]);
+			if (pathSet.intersection(new Set(this.permutationPaths)).size === 0) return this;
+			const extractedValues = Object.entries(flatValues).map(([k, v]) => {
+				const k2 = `#${k}`;
+				const filteredPaths = paths.filter((u) => u.startsWith(k2));
+				if (filteredPaths.length === 0) return v;
+				if (filteredPaths.includes(k2)) return each();
+				const shiftPaths = filteredPaths.map((u) => u.replace(`${k2}.`, ''));
+				return v.extract(shiftPaths);
+			});
+			return series(...extractedValues);
+		},
+		generatorAt(path) {
+			if (path === undefined) return each();
+			if (!this.permutationPaths.includes(path as SeriesPermutationPaths<T>)) return each();
+			const [splitted, ...rest] = path?.split('.').map((v) => v.replace('#', '')) ?? [];
+			if (!path || !splitted || !(splitted in flatValues)) return each();
+			const v = flatValues[parseInt(splitted)]!;
+			if (rest.length === 0) return v;
+			return v.generatorAt(rest.join('.'));
+		},
+		override(v) {
+			return merge(this, v);
+		},
+	} satisfies Series<T>);
 }
 
 export function isSeries(v: PermutationGenerator): v is Series {

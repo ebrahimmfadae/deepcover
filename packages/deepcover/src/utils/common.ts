@@ -18,7 +18,7 @@ export type SplitEntries<T extends Expandable, K extends keyof T = keyof T> =
 	])[]
 		? U
 		: never;
-export type UnwrapSplitEntries<T extends readonly (readonly [unknown, unknown])[]> = {
+export type UnwrapSplitEntries<T extends ExpandableArray<readonly [unknown, unknown]>> = {
 	[K in keyof T]: T[K][1];
 };
 export type EntryValuesAsTuple<T extends Expandable> = T extends ExpandableArray
@@ -40,20 +40,24 @@ export type ToPrimitive<T> = T extends number
 					: T extends undefined
 						? undefined
 						: never;
-export type Length<T extends readonly unknown[]> = T extends { length: infer L extends number }
-	? `${L}` extends `${infer S extends bigint}`
-		? S
-		: never
-	: never;
+export type Length<T extends readonly unknown[]> = readonly unknown[] extends T
+	? bigint
+	: T extends { length: infer L extends number }
+		? `${L}` extends `${infer S extends bigint}`
+			? S
+			: never
+		: never;
 export type FlattenTuple<
 	T extends readonly unknown[],
 	A extends readonly unknown[] = readonly [],
 > = T extends readonly [infer F, ...infer R]
 	? FlattenTuple<R, F extends readonly unknown[] ? [...A, ...F] : [...A, F]>
 	: A;
-export type ExtractIndices<T extends readonly unknown[]> = {
+type MapIndices<T extends ExpandableArray> = {
 	[K in keyof T]: K extends `${infer U extends number}` ? U : never;
 }[keyof T & number];
+export type ExtractIndices<T extends ExpandableArray> =
+	MapIndices<T> extends never ? number : MapIndices<T>;
 export type ExtractKeys<T extends Expandable> =
 	T extends Readonly<Record<string, unknown>>
 		? keyof T

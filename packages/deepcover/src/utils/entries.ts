@@ -1,7 +1,6 @@
-export function hasKey<T extends Readonly<Record<PropertyKey, unknown>> | readonly unknown[]>(
-	object: T,
-	key?: PropertyKey,
-): key is NonNullable<keyof T> {
-	if (key === undefined) return false;
-	return key in object;
+import type { Expandable } from '#src/utils/expandable-check';
+
+export function hasKey<T extends Expandable>(o: T, k?: PropertyKey): k is keyof T {
+	if (k === undefined) return false;
+	return k in o;
 }

@@ -1,14 +1,8 @@
-import type {
-	InferPermutationType,
-	PermutationGenerator,
-	PermutationPatch,
-} from '#src/permutation/definitions';
+import type { InferPermutationType, PermutationGenerator } from '#src/permutation/definitions';
 
-export interface SealGenerator<out T extends PermutationGenerator> {
-	(): Iterable<InferPermutationType<T>>;
-}
-
-export interface SealPatch<out T extends PermutationGenerator> extends PermutationPatch {
+export type Seal<T extends PermutationGenerator = PermutationGenerator> = PermutationGenerator<
+	InferPermutationType<T>
+> & {
 	readonly size: T['size'];
 	readonly modifiers: T['modifiers'];
 	readonly originalInputArg: T;
@@ -16,8 +10,4 @@ export interface SealPatch<out T extends PermutationGenerator> extends Permutati
 	readonly structure: 'primitive';
 	readonly permutationPaths: readonly [];
 	readonly primitivePermutationPaths: readonly [];
-}
-
-export interface Seal<T extends PermutationGenerator = PermutationGenerator>
-	extends SealGenerator<T>,
-		SealPatch<T> {}
+};

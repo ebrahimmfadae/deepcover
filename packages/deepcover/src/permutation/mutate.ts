@@ -14,6 +14,6 @@ export function* mutate<T extends PermutationGenerator, U extends PermutationGen
 	limits?: { max?: number },
 ): Generator<{ before: InferPermutationType<T>; after: unknown }, void, unknown> {
 	const merged = a.override(combo(b, limits));
-	const permutations = explicitPermutations([a(), merged()]);
+	const permutations = explicitPermutations([a, merged]);
 	yield* permutations.map((v) => ({ before: v[0] as InferPermutationType<T>, after: v[1] }));
 }

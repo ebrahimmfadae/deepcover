@@ -3,11 +3,9 @@
 
 export type Structure = 'array' | 'pojo' | 'mixed' | 'primitive';
 export type Permutation<T = unknown> = Iterable<T>;
-export type InferPermutationType<T extends PermutationGenerator> = UnwrapPermutation<
-	UnwrapPermutationGenerator<T>
->;
-export type UnwrapPermutation<T extends Permutation> = T extends Permutation<infer U> ? U : never;
-export interface PermutationPatch {
+export type InferPermutationType<T extends PermutationGenerator> =
+	T extends PermutationGenerator<infer U> ? U : never;
+export interface PermutationGenerator<T = unknown> extends Iterable<T> {
 	readonly size: bigint;
 	readonly originalInputArg?: unknown;
 	readonly type: string;
@@ -40,9 +38,3 @@ export interface PermutationPatch {
 	 */
 	readonly override: (v: PermutationGenerator) => PermutationGenerator;
 }
-export interface PermutationGenerator<out T extends Permutation = Permutation>
-	extends PermutationPatch {
-	(): T;
-}
-export type UnwrapPermutationGenerator<T extends PermutationGenerator> =
-	T extends PermutationGenerator<infer P> ? P : never;
