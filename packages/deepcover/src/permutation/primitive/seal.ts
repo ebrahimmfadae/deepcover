@@ -1,13 +1,18 @@
-import type { InferPermutationType, PermutationGenerator } from '#src/permutation/definitions';
+import type { PermutationGenerator } from '#src/permutation/definitions';
+import { checkPermutationType } from '#src/permutation/primitive/check-permutation-type';
 import { each } from '#src/permutation/primitive/each';
+import type { Never } from '#src/permutation/primitive/never.types';
 import type { Seal } from '#src/permutation/primitive/seal.types';
 import { merge } from '#src/permutation/utils';
 
-export function seal<const T extends PermutationGenerator>(input: T): Seal<T> {
-	if (isSealed(input)) return input as unknown as Seal<T>;
+export function seal(input: Never): Never;
+export function seal<const T extends PermutationGenerator>(input: Extract<T, Seal>): T;
+export function seal<const T extends PermutationGenerator>(input: T): Seal<T>;
+export function seal(input: PermutationGenerator): Seal | Never {
+	if (checkPermutationType(input, 'seal') || checkPermutationType(input, 'never')) return input;
 	return Object.assign(Object.create(null), {
 		*[Symbol.iterator]() {
-			yield* input as PermutationGenerator<InferPermutationType<T>>;
+			yield* input;
 		},
 		get size() {
 			return input.size;
@@ -42,9 +47,5 @@ export function seal<const T extends PermutationGenerator>(input: T): Seal<T> {
 		override(v) {
 			return merge(this, v);
 		},
-	} satisfies Seal<T>);
-}
-
-export function isSealed(v: PermutationGenerator): v is Seal {
-	return v.type === 'seal';
+	} satisfies Seal);
 }

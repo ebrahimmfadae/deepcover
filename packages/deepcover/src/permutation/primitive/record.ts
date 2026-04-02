@@ -1,6 +1,7 @@
 import type { PermutationGenerator } from '#src/permutation/definitions';
 import { clean } from '#src/permutation/modifiers/clean';
 import { isOptional, optional } from '#src/permutation/modifiers/optional';
+import { checkPermutationType } from '#src/permutation/primitive/check-permutation-type';
 import { each } from '#src/permutation/primitive/each';
 import type { RecordArray } from '#src/permutation/primitive/record-array.types';
 import type { RecordPojo } from '#src/permutation/primitive/record-pojo.types';
@@ -38,20 +39,8 @@ export function component<const T extends RecordInput>(input: T): T {
 	return input;
 }
 
-export function isRecord(v: PermutationGenerator): v is MyRecord {
-	return v.type === 'record';
-}
-
-export function isPojoRecord(v: PermutationGenerator): v is RecordPojo {
-	return isRecord(v) && v.structure === 'pojo';
-}
-
-export function isArrayRecord(v: PermutationGenerator): v is RecordArray {
-	return isRecord(v) && v.structure === 'array';
-}
-
 export function mergeRecord(a: Loose<MyRecord>, b: Loose<MyRecord>): Loose<MyRecord> {
-	if (isPojoRecord(a) && isPojoRecord(b)) {
+	if (checkPermutationType(a, 'record', 'pojo') && checkPermutationType(b, 'record', 'pojo')) {
 		const entries = Object.entries(a.originalInputArg).map(([k, u]) => {
 			if (hasKey(b.originalInputArg, k))
 				return [k, u.override(b.originalInputArg[k]!)] as const;
@@ -65,7 +54,7 @@ export function mergeRecord(a: Loose<MyRecord>, b: Loose<MyRecord>): Loose<MyRec
 		const res = isOptional(b) ? optional(res0) : res0;
 		return res as MyRecord;
 	}
-	if (isArrayRecord(a) && isArrayRecord(b)) {
+	if (checkPermutationType(a, 'record', 'array') && checkPermutationType(b, 'record', 'array')) {
 		const maxLength = Math.max(a.originalInputArg.length, b.originalInputArg.length);
 		const overrode = Array.from(new Array(maxLength), (_, i) => {
 			if (hasKey(a.originalInputArg, i) && hasKey(b.originalInputArg, i))

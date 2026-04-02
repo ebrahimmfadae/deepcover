@@ -1,10 +1,4 @@
 import type { PermutationGenerator } from '#src/permutation/definitions';
-import { clean } from '#src/permutation/modifiers/clean';
-import { isEach } from '#src/permutation/primitive/each';
-import { isNever, never } from '#src/permutation/primitive/never';
-import { isRecord, mergeRecord } from '#src/permutation/primitive/record';
-import { isSealed } from '#src/permutation/primitive/seal';
-import { isSeries, mergeSeries, series } from '#src/permutation/primitive/series';
 
 export function allPathLevels(path: string): string[] {
 	const splitted = path.split('.');
@@ -22,20 +16,28 @@ export function normalizedPaths(
  * It should avoid generating the permutations that will be overrode in regular JavaScript object merging.
  * Exception: If only `b` is optional, the `a` is also assumed optional.
  */
+// TODO: Merging optional permutations is not handled very well
 export function merge(a: PermutationGenerator, b: PermutationGenerator): PermutationGenerator {
-	// TODO: Merging optional permutations is not handled very well
-	if (isEach(a) || isEach(b)) return b;
-	if (isSealed(a) || isSealed(b)) return b;
-	if (isNever(a) && isNever(b)) return never();
-	if (isNever(a)) return b;
-	if (isNever(b)) return a;
-	if (isRecord(a)) {
-		if (isRecord(b)) return mergeRecord(a, b);
-		if (isSeries(b)) return mergeSeries(series(clean(a)), b);
-	}
-	if (isSeries(a)) {
-		if (isRecord(b)) return mergeSeries(a, series(clean(b)));
-		if (isSeries(b)) return mergeSeries(a, b);
-	}
+	// if (isNever(a) && isNever(b)) return never();
+	// if (!isOptional(a) && !isOptional(b)) {
+	// 	if (isNever(a)) return b;
+	// 	if (isNever(b)) return a;
+	// 	if (isEach(a) || isEach(b)) return b;
+	// } else if (isOptional(a) && isOptional(b)) {
+	// } else if (isOptional(b)) {
+	// 	if (isNever(a)) return b;
+	// 	if (isNever(b)) return a;
+	// } else if (isOptional(a)) {
+	// }
+	// if (isEach(a) || isEach(b)) return b;
+	// if (isSealed(a) || isSealed(b)) return b;
+	// if (isRecord(a)) {
+	// 	if (isRecord(b)) return mergeRecord(a, b);
+	// 	if (isSeries(b)) return mergeSeries(series(clean(a)), b);
+	// }
+	// if (isSeries(a)) {
+	// 	if (isRecord(b)) return mergeSeries(a, series(clean(b)));
+	// 	if (isSeries(b)) return mergeSeries(a, b);
+	// }
 	throw new Error('Illegal state: Unhandled merge');
 }

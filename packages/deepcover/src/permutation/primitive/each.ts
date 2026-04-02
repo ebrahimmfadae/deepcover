@@ -1,4 +1,3 @@
-import type { PermutationGenerator } from '#src/permutation/definitions';
 import type { Each } from '#src/permutation/primitive/each.types';
 import { never } from '#src/permutation/primitive/never';
 import type { Never } from '#src/permutation/primitive/never.types';
@@ -46,8 +45,4 @@ export function each(...values: readonly unknown[]): Each | Never {
 			return merge(this, v);
 		},
 	} satisfies Each);
-}
-
-export function isEach(v: PermutationGenerator): v is Each {
-	return v.type === 'each';
 }

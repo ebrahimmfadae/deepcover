@@ -1,10 +1,11 @@
 import type { InferPermutationType, PermutationGenerator } from '#src/permutation/definitions';
+import type { IfElse } from '#src/utils/conditional';
 
-export type AppendModifier<T extends readonly string[]> = 'optional' extends T[number]
-	? T
-	: readonly never[] extends T
-		? readonly ['optional']
-		: readonly ['optional', ...T];
+export type AppendModifier<T extends readonly string[]> = IfElse<
+	Extract<'optional', T[number]>,
+	T,
+	readonly never[] extends T ? readonly ['optional'] : readonly ['optional', ...T]
+>;
 
 export type Optional<T extends PermutationGenerator = PermutationGenerator> = PermutationGenerator<
 	InferPermutationType<T>

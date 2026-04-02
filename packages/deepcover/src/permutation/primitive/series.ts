@@ -1,6 +1,7 @@
 import type { InferPermutationType, PermutationGenerator } from '#src/permutation/definitions';
 import { isClean } from '#src/permutation/modifiers/clean';
 import { isOptional, optional } from '#src/permutation/modifiers/optional';
+import { checkPermutationType } from '#src/permutation/primitive/check-permutation-type';
 import { each } from '#src/permutation/primitive/each';
 import type {
 	Series,
@@ -99,10 +100,6 @@ export function series<const T extends readonly PermutationGenerator[]>(...value
 	} satisfies Series<T>);
 }
 
-export function isSeries(v: PermutationGenerator): v is Series {
-	return v.type === 'series';
-}
-
 /**
  * 1. All primitives in `a` should be overridden by `b` completely
  * 2. All expandable-s in `a` should be merged with `b` of the same structure
@@ -140,7 +137,9 @@ export function mergeSeries(a: Loose<Series>, b: Loose<Series>): Loose<Series> {
 }
 
 function flattenValues(a: readonly PermutationGenerator[]): readonly PermutationGenerator[] {
-	return a.flatMap((v) => (isSeries(v) ? flattenValues(v.originalInputArg) : v));
+	return a.flatMap((v) =>
+		checkPermutationType(v, 'series') ? flattenValues(v.originalInputArg) : v,
+	);
 }
 
 function aIsSubsetOfB(a: PermutationGenerator, b: PermutationGenerator): boolean {

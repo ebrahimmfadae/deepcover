@@ -1,13 +1,18 @@
-import type { InferPermutationType, PermutationGenerator } from '#src/permutation/definitions';
-import type { AppendModifier, Optional } from '#src/permutation/modifiers/optional.types';
+import type { PermutationGenerator } from '#src/permutation/definitions';
+import type { AsOptional, Optional } from '#src/permutation/modifiers/optional.types';
+import { checkPermutationType } from '#src/permutation/primitive/check-permutation-type';
+import type { Never } from '#src/permutation/primitive/never.types';
 import { merge } from '#src/permutation/utils';
 
-export function optional<const T extends PermutationGenerator>(input: T): Optional<T> {
-	if (isOptional(input)) return input as unknown as Optional<T>;
-	const modifiers = ['optional', ...input.modifiers] as AppendModifier<T['modifiers']>;
+export function optional(input: Never): Never;
+export function optional<const T extends PermutationGenerator>(input: AsOptional<T>): T;
+export function optional<const T extends PermutationGenerator>(input: T): Optional<T>;
+export function optional(input: PermutationGenerator): Optional | Never {
+	if (checkPermutationType(input, 'never') || isOptional(input)) return input;
+	const modifiers = ['optional', ...input.modifiers];
 	return Object.assign(Object.create(null), {
 		*[Symbol.iterator]() {
-			yield* input as PermutationGenerator<InferPermutationType<T>>;
+			yield* input;
 		},
 		get size() {
 			return input.size;
@@ -42,7 +47,7 @@ export function optional<const T extends PermutationGenerator>(input: T): Option
 		override(v) {
 			return merge(this, v);
 		},
-	} satisfies Optional<T>);
+	} satisfies Optional);
 }
 
 export function isOptional(v: PermutationGenerator): v is Optional {
