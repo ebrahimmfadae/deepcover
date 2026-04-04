@@ -1,6 +1,8 @@
 import { cachedIterable } from '#src/permutation/pure/cached-iterable';
 import { iterableWithIndex } from '#src/permutation/pure/iterable-with-index';
 import type { BuildTuple } from '#src/utils/common';
+import type { IfElse } from '#src/utils/conditional';
+import type { IsEqual, IterableElement, LessThan } from 'type-fest';
 
 const defaultPermutationsOptions = Object.freeze({
 	size: 1,
@@ -9,21 +11,36 @@ const defaultPermutationsOptions = Object.freeze({
 
 export type PermutationsOptions = { readonly size: number; readonly exclusive?: boolean };
 
-export type Permutations<T, U extends PermutationsOptions> = [T] extends [never]
-	? never
-	: number extends U['size']
+type Length<T> = readonly unknown[] extends T
+	? number
+	: T extends { length: infer L extends number }
+		? L
+		: never;
+
+type BuildResultArray<T, S extends number> = [T] extends [never]
+	? readonly []
+	: number extends S
 		? T[]
-		: 0 extends U['size']
-			? never
-			: Readonly<BuildTuple<T, U['size']>>;
+		: Readonly<BuildTuple<T, S>>;
+
+type CoalesceBoolean<T extends boolean | undefined> = IfElse<T, true, false, false | undefined>;
+
+type IsTooShort<T extends Iterable<unknown>, S extends number> = LessThan<Length<T>, S>;
+
+export type Permutations<T extends Iterable<unknown>, U extends PermutationsOptions> = IfElse<
+	IsTooShort<T, U['size']>,
+	IfElse<
+		CoalesceBoolean<U['exclusive']> | IsEqual<Length<T>, 0>,
+		never,
+		BuildResultArray<IterableElement<T>, U['size']>
+	>,
+	BuildResultArray<IterableElement<T>, U['size']>
+>;
 
 export function* permutations<
-	const T,
+	const T extends Iterable<unknown>,
 	const U extends PermutationsOptions = typeof defaultPermutationsOptions,
->(
-	input: Iterable<T>,
-	options?: U & PermutationsOptions,
-): Generator<Permutations<T, U>, void, unknown> {
+>(input: T, options?: U & PermutationsOptions): Generator<Permutations<T, U>, void, unknown> {
 	const {
 		size = defaultPermutationsOptions.size,
 		exclusive = defaultPermutationsOptions.exclusive,

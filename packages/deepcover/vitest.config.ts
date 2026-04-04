@@ -1,12 +1,12 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import swc from 'unplugin-swc';
-import { defineConfig } from 'vitest/config';
+import { defineConfig, type ViteUserConfigExport } from 'vitest/config';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export default defineConfig({
+const config: ViteUserConfigExport = defineConfig({
 	test: {
 		globals: true,
 		root: './',
@@ -26,6 +26,7 @@ export default defineConfig({
 		reporters: 'default',
 		isolate: false,
 		pool: 'threads',
+		passWithNoTests: true,
 	},
 	resolve: {
 		alias: {
@@ -35,3 +36,5 @@ export default defineConfig({
 	},
 	plugins: [swc.vite()],
 });
+
+export default config;
