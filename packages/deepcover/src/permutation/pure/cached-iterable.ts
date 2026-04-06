@@ -1,6 +1,8 @@
 import { CACHED } from '#src/permutation/symbols';
 
-export type CachedIterable<T> = Iterable<T> & { [CACHED]: CACHED };
+export interface CachedIterable<out T> extends Iterable<T> {
+	[CACHED]: CACHED;
+}
 
 export function cachedIterable<const T>(iterable: Iterable<T>): CachedIterable<T> {
 	if (CACHED in iterable) return iterable as CachedIterable<T>;

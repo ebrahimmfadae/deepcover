@@ -18,7 +18,10 @@ export function* explicitPermutations<const T extends readonly Iterable<unknown>
 		const { done, value } = iterables[i]!.next();
 		if (!done) output[i] = value;
 	}
-	yield output as ExplicitPermutations<T>;
+	// NOTE: When we yield the array without cloning, calling .toArray() would cause an issue
+	// 		where first element is replaced by the last one.
+	//			Example: Iterator.from(explicitPermutations([1,2,3])).toArray() eq [[3],[2],[3]]
+	yield gapAwareClone(output) as ExplicitPermutations<T>;
 	for (let pivot = input.length - 1; pivot >= 0; pivot--) {
 		const { done, value } = iterables[pivot]!.next();
 		if (done) continue;
@@ -29,8 +32,13 @@ export function* explicitPermutations<const T extends readonly Iterable<unknown>
 		}
 		output[pivot] = value;
 		pivot = input.length;
-		const newOutput = new Array(output.length);
-		output.forEach((v, i) => (newOutput[i] = v));
-		yield newOutput as ExplicitPermutations<T>;
+		yield gapAwareClone(output) as ExplicitPermutations<T>;
 	}
+}
+
+// Cloning an array in this way will preserve empty items
+function gapAwareClone<T extends unknown[]>(v: T): T {
+	const res = new Array(v.length) as T;
+	v.forEach((u, i) => (res[i] = u));
+	return res;
 }
