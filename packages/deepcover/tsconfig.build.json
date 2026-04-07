@@ -5,8 +5,9 @@
 		"rootDir": "src",
 		"declarationMap": false,
 		"sourceMap": false,
-		"types": [] // Excludes global type declarations like vitest and jest
+		"types": [], // Excludes global type declarations like vitest and jest
+		"isolatedDeclarations": true
 	},
 	"include": ["src"],
-	"exclude": ["**/node_modules", "**/*.spec.ts", "**/*.spec-d.ts"]
+	"exclude": ["**/node_modules", "**/*.spec.ts", "**/*.spec-d.ts", "**/*.fixture.ts"]
 }

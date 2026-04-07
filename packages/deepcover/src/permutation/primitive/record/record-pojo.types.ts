@@ -3,7 +3,7 @@ import type { AsOptional } from '#src/permutation/modifiers/optional.types';
 import type {
 	BuildPermutationPath,
 	StringifyPathRecord,
-} from '#src/permutation/primitive/record.types';
+} from '#src/permutation/primitive/record/record.types';
 import type { MultiplyTuple } from '#src/utils/arithmetic/multiply';
 import type { Sum } from '#src/utils/arithmetic/sum';
 import type { EntryValuesAsTuple, ExtractKeys } from '#src/utils/common';

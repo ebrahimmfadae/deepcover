@@ -48,12 +48,21 @@ export type Length<T extends readonly unknown[]> = readonly unknown[] extends T
 			? S
 			: never
 		: never;
-export type FlattenTuple<
+export type ShallowFlatTuple<
 	T extends readonly unknown[],
 	A extends readonly unknown[] = readonly [],
-> = T extends readonly [infer F, ...infer R]
-	? FlattenTuple<R, F extends readonly unknown[] ? [...A, ...F] : [...A, F]>
-	: A;
+> = T extends readonly [unknown, ...(readonly unknown[])] | readonly []
+	? T extends readonly [infer F, ...infer R]
+		? ShallowFlatTuple<
+				R,
+				F extends readonly unknown[] ? readonly [...A, ...F] : readonly [...A, F]
+			>
+		: A
+	: T extends readonly (infer U)[]
+		? U extends readonly unknown[]
+			? readonly U[number][]
+			: readonly U[]
+		: never;
 type MapIndices<T extends ExpandableArray> = {
 	[K in keyof T]: K extends `${infer U extends number}` ? U : never;
 }[keyof T & number];

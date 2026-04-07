@@ -1,4 +1,7 @@
 import type { PermutationGenerator } from '#src/permutation/definitions';
+import { clean } from '#src/permutation/modifiers/clean';
+import { isOptional, optional } from '#src/permutation/modifiers/optional';
+import { series } from '#src/permutation/primitive/series/series';
 
 export function allPathLevels(path: string): string[] {
 	const splitted = path.split('.');
@@ -12,32 +15,25 @@ export function normalizedPaths(
 }
 
 /**
- * Merging has one principle.
- * It should avoid generating the permutations that will be overrode in regular JavaScript object merging.
- * Exception: If only `b` is optional, the `a` is also assumed optional.
+ * To be used in outputMerge()
  */
-// TODO: Merging optional permutations is not handled very well
-export function merge(a: PermutationGenerator, b: PermutationGenerator): PermutationGenerator {
-	// if (isNever(a) && isNever(b)) return never();
-	// if (!isOptional(a) && !isOptional(b)) {
-	// 	if (isNever(a)) return b;
-	// 	if (isNever(b)) return a;
-	// 	if (isEach(a) || isEach(b)) return b;
-	// } else if (isOptional(a) && isOptional(b)) {
-	// } else if (isOptional(b)) {
-	// 	if (isNever(a)) return b;
-	// 	if (isNever(b)) return a;
-	// } else if (isOptional(a)) {
-	// }
-	// if (isEach(a) || isEach(b)) return b;
-	// if (isSealed(a) || isSealed(b)) return b;
-	// if (isRecord(a)) {
-	// 	if (isRecord(b)) return mergeRecord(a, b);
-	// 	if (isSeries(b)) return mergeSeries(series(clean(a)), b);
-	// }
-	// if (isSeries(a)) {
-	// 	if (isRecord(b)) return mergeSeries(a, series(clean(b)));
-	// 	if (isSeries(b)) return mergeSeries(a, b);
-	// }
-	throw new Error('Illegal state: Unhandled merge');
+export function optionalWiseConcat(
+	a: PermutationGenerator,
+	b: PermutationGenerator,
+	merged?: PermutationGenerator,
+): PermutationGenerator {
+	// TODO: Maybe integrity of a and b and merged should be asserted. Or maybe finding a less
+	//	integrity prone approach
+	if (merged) {
+		if (isOptional(merged)) throw new Error('`merged` should not be optional');
+		if (isOptional(a) && isOptional(b)) return optional(series(clean(a), clean(b), merged));
+		if (isOptional(a)) return series(clean(b), merged);
+		if (isOptional(b)) return series(clean(a), merged);
+		return merged;
+	} else {
+		if (isOptional(a) && isOptional(b)) return optional(series(clean(a), clean(b)));
+		if (isOptional(a)) return b;
+		if (isOptional(b)) return series(clean(a), clean(b));
+	}
+	return b;
 }

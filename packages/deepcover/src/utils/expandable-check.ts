@@ -1,34 +1,17 @@
 export type ExpandableArray<T = unknown> = readonly T[];
 export type ExpandableObject<T = unknown> = Readonly<Record<string, T>>;
-export type IsExpandableArray<T> = T extends ExpandableArray ? true : false;
-export type IsExpandableObject<T> = T extends ExpandableObject ? true : false;
 export type Expandable<T = unknown> = ExpandableObject<T> | ExpandableArray<T>;
-export type IsExpandable<T> = T extends Expandable ? true : false;
-export type AsExpandable<T> = T extends Expandable ? T : never;
 
-export function isExpandableObject<T>(value: T): value is Extract<T, ExpandableObject> {
+export function isExpandableObject(value: unknown): value is ExpandableObject {
 	if (value === null || typeof value !== 'object') return false;
 	const prototype = Object.getPrototypeOf(value);
 	return prototype === Object.prototype || prototype === null;
 }
 
-export function isExpandableArray<T>(value: T): value is Extract<T, ExpandableArray> {
+export function isExpandableArray(value: unknown): value is ExpandableArray {
 	return Array.isArray(value);
 }
 
-export function isExpandable<T>(value: T | Expandable): value is Extract<T, Expandable> {
+export function isExpandable(value: unknown): value is Expandable {
 	return isExpandableObject(value) || isExpandableArray(value);
 }
-
-export function isNotExpandable<T>(value: T): value is Exclude<T, Expandable> {
-	return !isExpandable(value);
-}
-
-// export function expandableCheck<const T>(value: T) {
-// 	const result = { expandable: isExpandable(value), value };
-// 	return result as T extends unknown
-// 		? IsExpandable<T> extends true
-// 			? { readonly expandable: true; readonly value: Extract<T, Expandable> }
-// 			: { readonly expandable: false; readonly value: Exclude<T, Expandable> }
-// 		: never;
-// }

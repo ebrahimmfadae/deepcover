@@ -1,6 +1,6 @@
 import type { PermutationGenerator } from '#src/permutation/definitions';
-import { series } from '#src/permutation/primitive/series';
-import type { Series } from '#src/permutation/primitive/series.types';
+import { series } from '#src/permutation/primitive/series/series';
+import type { Series } from '#src/permutation/primitive/series/series.types';
 import { combinations } from '#src/permutation/pure/combinations';
 
 export function combo<T extends PermutationGenerator>(

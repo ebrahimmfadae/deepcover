@@ -1,6 +1,6 @@
 import type { PermutationGenerator } from '#src/permutation/definitions';
-import type { RecordArray } from '#src/permutation/primitive/record-array.types';
-import type { RecordPojo } from '#src/permutation/primitive/record-pojo.types';
+import type { RecordArray } from '#src/permutation/primitive/record/record-array.types';
+import type { RecordPojo } from '#src/permutation/primitive/record/record-pojo.types';
 import type { Stringify } from '#src/utils/common';
 import type { IfElse } from '#src/utils/conditional';
 import type { ExpandableArray, ExpandableObject } from '#src/utils/expandable-check';

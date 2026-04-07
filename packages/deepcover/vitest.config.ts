@@ -15,7 +15,7 @@ const config: ViteUserConfigExport = defineConfig({
 		hideSkippedTests: false,
 		chaiConfig: { truncateThreshold: 120 },
 		slowTestThreshold: 0,
-		logHeapUsage: true,
+		logHeapUsage: false,
 		open: false,
 		bail: 1,
 		include: ['**/*.{test,spec,bench}.?(c|m)[jt]s?(x)'],
@@ -27,6 +27,9 @@ const config: ViteUserConfigExport = defineConfig({
 		isolate: false,
 		pool: 'threads',
 		passWithNoTests: true,
+		fileParallelism: false,
+		maxConcurrency: 1,
+		maxWorkers: 1,
 	},
 	resolve: {
 		alias: {

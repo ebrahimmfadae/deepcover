@@ -2,14 +2,14 @@ import type { PermutationGenerator } from '#src/permutation/definitions';
 import { clean } from '#src/permutation/modifiers/clean';
 import { isOptional, optional } from '#src/permutation/modifiers/optional';
 import { checkPermutationType } from '#src/permutation/primitive/check-permutation-type';
-import { each } from '#src/permutation/primitive/each';
-import type { RecordArray } from '#src/permutation/primitive/record-array.types';
-import type { RecordPojo } from '#src/permutation/primitive/record-pojo.types';
-import type { MyRecord, RecordInput } from '#src/permutation/primitive/record.types';
-import { series } from '#src/permutation/primitive/series';
+import { each } from '#src/permutation/primitive/each/each';
+import type { RecordArray } from '#src/permutation/primitive/record/record-array.types';
+import type { RecordPojo } from '#src/permutation/primitive/record/record-pojo.types';
+import type { MyRecord, RecordInput } from '#src/permutation/primitive/record/record.types';
+import { series } from '#src/permutation/primitive/series/series';
 import { explicitPermutations } from '#src/permutation/pure/explicit-permutations';
 import { REMOVE } from '#src/permutation/symbols';
-import { allPathLevels, merge } from '#src/permutation/utils';
+import { allPathLevels, optionalWiseConcat } from '#src/permutation/utils';
 import type { Loose } from '#src/utils/common';
 import { hasKey } from '#src/utils/entries';
 import {
@@ -41,31 +41,52 @@ export function component<const T extends RecordInput>(input: T): T {
 
 export function mergeRecord(a: Loose<MyRecord>, b: Loose<MyRecord>): Loose<MyRecord> {
 	if (checkPermutationType(a, 'record', 'pojo') && checkPermutationType(b, 'record', 'pojo')) {
-		const entries = Object.entries(a.originalInputArg).map(([k, u]) => {
-			if (hasKey(b.originalInputArg, k))
-				return [k, u.override(b.originalInputArg[k]!)] as const;
+		const entries = Object.entries(b.originalInputArg).map(([k, u]) => {
+			if (hasKey(a.originalInputArg, k)) return [k, a.originalInputArg[k]!.merge(u)] as const;
 			return [k, u] as const;
 		});
 		const overrode = {
-			...b.originalInputArg,
+			...a.originalInputArg,
 			...Object.fromEntries(entries),
 		};
-		const res0 = isOptional(a) ? series(record(overrode), clean(b)) : record(overrode);
-		const res = isOptional(b) ? optional(res0) : res0;
-		return res as MyRecord;
+		return isOptional(b) ? optional(record(overrode)) : record(overrode);
 	}
 	if (checkPermutationType(a, 'record', 'array') && checkPermutationType(b, 'record', 'array')) {
 		const maxLength = Math.max(a.originalInputArg.length, b.originalInputArg.length);
 		const overrode = Array.from(new Array(maxLength), (_, i) => {
 			if (hasKey(a.originalInputArg, i) && hasKey(b.originalInputArg, i))
-				return a.originalInputArg[i]!.override(b.originalInputArg[i]!);
+				return a.originalInputArg[i]!.merge(b.originalInputArg[i]!);
 			return (a.originalInputArg[i] ?? b.originalInputArg[i])!;
 		});
-		const res0 = isOptional(a) ? series(record(overrode), clean(b)) : record(overrode);
-		const res = isOptional(b) ? optional(res0) : res0;
-		return res as MyRecord;
+		return isOptional(b) ? optional(record(overrode)) : record(overrode);
 	}
 	return b;
+}
+
+export function outputMergeRecord(a: Loose<MyRecord>, b: Loose<MyRecord>): PermutationGenerator {
+	if (a.subSchemaOf(b)) return b;
+	if (checkPermutationType(a, 'record', 'pojo') && checkPermutationType(b, 'record', 'pojo')) {
+		const entries = Object.entries(b.originalInputArg).map(([k, u]) => {
+			if (hasKey(a.originalInputArg, k))
+				return [k, a.originalInputArg[k]!.outputMerge(u)] as const;
+			return [k, u] as const;
+		});
+		const overrode = {
+			...a.originalInputArg,
+			...Object.fromEntries(entries),
+		};
+		return optionalWiseConcat(a, b, record(overrode));
+	}
+	if (checkPermutationType(a, 'record', 'array') && checkPermutationType(b, 'record', 'array')) {
+		const maxLength = Math.max(a.originalInputArg.length, b.originalInputArg.length);
+		const overrode = Array.from(new Array(maxLength), (_, i) => {
+			if (hasKey(a.originalInputArg, i) && hasKey(b.originalInputArg, i))
+				return a.originalInputArg[i]!.outputMerge(b.originalInputArg[i]!);
+			return (a.originalInputArg[i] ?? b.originalInputArg[i])!;
+		});
+		return optionalWiseConcat(a, b, record(overrode));
+	}
+	throw new Error('Illegal state: invalid merge arguments');
 }
 
 function recordPojo<const T extends ExpandableObject<PermutationGenerator>>(
@@ -132,7 +153,7 @@ function base<const T extends RecordInput>(input: T) {
 			return size;
 		},
 		get modifiers() {
-			return [] as readonly never[];
+			return [] as const;
 		},
 		get originalInputArg() {
 			return input;
@@ -195,8 +216,40 @@ function base<const T extends RecordInput>(input: T) {
 			if (rest.length === 0) return u;
 			return u.generatorAt(rest.join('.'));
 		},
-		override(v) {
-			return merge(this, v);
+		subSchemaOf(v) {
+			if (checkPermutationType(v, 'record')) {
+				if (this.structure !== v.structure) return true;
+				const isSubsetOfArray = entries.map(
+					([k, u]) =>
+						hasKey(v.originalInputArg, k) &&
+						u.subSchemaOf(v.originalInputArg[k] as PermutationGenerator),
+				);
+				const isSubsetOf = isSubsetOfArray.every(Boolean);
+				if (!isSubsetOf) return false;
+				if (isOptional(v)) return isOptional(this);
+				return isSubsetOf;
+			} else if (checkPermutationType(v, 'series')) {
+				const s = series(clean(this));
+				if (isOptional(this)) return optional(s).subSchemaOf(v);
+				else return s.subSchemaOf(v);
+			}
+			return true;
+		},
+		merge(v) {
+			if (checkPermutationType(v, 'record')) return mergeRecord(this, v);
+			return v;
+		},
+		outputMerge(v) {
+			if (checkPermutationType(v, 'record')) return outputMergeRecord(this, v);
+			if (checkPermutationType(v, 'series')) {
+				const s = series(clean(this));
+				if (isOptional(this)) return optional(s).outputMerge(v);
+				return s.outputMerge(v);
+			}
+			return optionalWiseConcat(this, v);
+		},
+		union() {
+			throw new Error('Not yet implemented');
 		},
 	} satisfies ThisType<MyRecord> & Omit<MyRecord, typeof Symbol.iterator>;
 	return { r, b };

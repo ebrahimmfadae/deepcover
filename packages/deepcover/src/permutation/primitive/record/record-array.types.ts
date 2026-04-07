@@ -3,13 +3,13 @@ import type { AsOptional } from '#src/permutation/modifiers/optional.types';
 import type {
 	BuildPermutationPath,
 	StringifyPathRecord,
-} from '#src/permutation/primitive/record.types';
+} from '#src/permutation/primitive/record/record.types';
 import type { MultiplyTuple } from '#src/utils/arithmetic/multiply';
 import type { Sum } from '#src/utils/arithmetic/sum';
 import type { EntryValuesAsTuple, ExtractIndices } from '#src/utils/common';
 import type { IfElse } from '#src/utils/conditional';
 import type { ExpandableArray } from '#src/utils/expandable-check';
-import type { SetTupleOptional } from '../../utils/set-tuple-optional';
+import type { SetTupleOptional } from '#src/utils/set-tuple-optional';
 
 type RecordInput = ExpandableArray<PermutationGenerator>;
 

@@ -6,32 +6,14 @@ import type { Never } from '#src/permutation/primitive/never.types';
 export function clean(input: Never): Never;
 export function clean<const T extends PermutationGenerator>(input: AsClean<T>): T;
 export function clean<const T extends PermutationGenerator>(input: T): Clean<T>;
-export function clean(input: PermutationGenerator): Clean {
+export function clean(input: PermutationGenerator): Clean | Never {
 	if (checkPermutationType(input, 'never') || isClean(input)) return input;
-	return Object.assign(Object.create(null), {
+	return Object.assign(Object.create(null), input, {
 		*[Symbol.iterator]() {
 			yield* input;
 		},
-		get size() {
-			return input.size;
-		},
 		get modifiers() {
-			return [] as readonly never[];
-		},
-		get originalInputArg() {
-			return input.originalInputArg;
-		},
-		get type() {
-			return input.type;
-		},
-		get structure() {
-			return input.structure;
-		},
-		get permutationPaths() {
-			return input.permutationPaths;
-		},
-		get primitivePermutationPaths() {
-			return input.primitivePermutationPaths;
+			return [];
 		},
 		extract(paths) {
 			return clean(input.extract(paths));
@@ -39,13 +21,7 @@ export function clean(input: PermutationGenerator): Clean {
 		exclude(paths) {
 			return clean(input.exclude(paths));
 		},
-		generatorAt(path) {
-			return input.generatorAt(path);
-		},
-		override(v) {
-			return input.override(v);
-		},
-	} satisfies Clean);
+	} satisfies Partial<Clean>);
 }
 
 export function isClean(v: PermutationGenerator): v is Clean {

@@ -1,36 +1,37 @@
-import type { PermutationGenerator } from '#src/permutation/definitions';
 import { isOptional } from '#src/permutation/modifiers/optional';
 import { checkPermutationType } from '#src/permutation/primitive/check-permutation-type';
 import type { Each } from '#src/permutation/primitive/each/each.types';
 import { never } from '#src/permutation/primitive/never';
 import type { Never } from '#src/permutation/primitive/never.types';
-import type { Seal } from '#src/permutation/primitive/seal.types';
 import { optionalWiseConcat } from '#src/permutation/utils';
 
-export function seal<const T extends Each | Never>(input: T): T;
-export function seal<const T extends PermutationGenerator>(input: T): Seal<T>;
-export function seal(input: PermutationGenerator): Seal | Each | Never {
-	if (
-		checkPermutationType(input, 'seal') ||
-		checkPermutationType(input, 'each') ||
-		checkPermutationType(input, 'never')
-	)
-		return input;
+/**
+ * TODO: Remove this comment if it is no longer valid
+ *
+ * The output values are considered as distinct values in any internal comparison.
+ * You can think of each value as a unique symbol consisting of (value,position).
+ *
+ * Example: `v != v` in `each(v) != each(v)` or `each(v,v) != each(v)`
+ */
+export function each(): Never;
+export function each<const T extends readonly unknown[]>(...values: T): Each<T>;
+export function each(...values: readonly unknown[]): Each | Never {
+	if (values.length === 0) return never();
 	return Object.assign(Object.create(null), {
 		*[Symbol.iterator]() {
-			yield* input;
+			yield* values;
 		},
 		get size() {
-			return input.size;
+			return BigInt(values.length);
 		},
 		get modifiers() {
-			return input.modifiers;
+			return [] as readonly never[];
 		},
 		get originalInputArg() {
-			return input;
+			return values;
 		},
 		get type() {
-			return 'seal' as const;
+			return 'each' as const;
 		},
 		get structure() {
 			return 'primitive' as const;
@@ -65,5 +66,5 @@ export function seal(input: PermutationGenerator): Seal | Each | Never {
 		union() {
 			throw new Error('Not yet implemented');
 		},
-	} satisfies Seal);
+	} satisfies Each);
 }

@@ -1,5 +1,4 @@
 import type { Never } from '#src/permutation/primitive/never.types';
-import { merge } from '#src/permutation/utils';
 
 export function never(): Never {
 	return singleton;
@@ -20,10 +19,10 @@ const n = {
 		return 'primitive' as const;
 	},
 	get permutationPaths() {
-		return [] as readonly [];
+		return [] as const;
 	},
 	get primitivePermutationPaths() {
-		return [] as readonly [];
+		return [] as const;
 	},
 	extract() {
 		return this;
@@ -34,8 +33,17 @@ const n = {
 	generatorAt() {
 		return this;
 	},
-	override(v) {
-		return merge(this, v);
+	subSchemaOf() {
+		return true;
+	},
+	merge(v) {
+		return v;
+	},
+	outputMerge(v) {
+		return v;
+	},
+	union() {
+		throw new Error('Not yet implemented');
 	},
 } satisfies Never;
 

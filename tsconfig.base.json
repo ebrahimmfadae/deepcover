@@ -6,7 +6,7 @@
 		"target": "ESNext",
 		"isolatedModules": true,
 		"erasableSyntaxOnly": true,
-		"isolatedDeclarations": true,
+		"isolatedDeclarations": false,
 		"verbatimModuleSyntax": true,
 		"exactOptionalPropertyTypes": true,
 		"noUncheckedIndexedAccess": true,

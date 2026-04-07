@@ -3,8 +3,10 @@ import type {
 	PermutationGenerator,
 	Structure,
 } from '#src/permutation/definitions';
-import type { StringifyPathRecord } from '#src/permutation/primitive/record.types';
-import type { ExtractIndices } from '#src/utils/common';
+import type { Each } from '#src/permutation/primitive/each/each.types';
+import type { Never } from '#src/permutation/primitive/never.types';
+import type { StringifyPathRecord } from '#src/permutation/primitive/record/record.types';
+import type { ExtractIndices, ShallowFlatTuple } from '#src/utils/common';
 import type { IfElse } from '#src/utils/conditional';
 import type { SumTuple } from '#src/utils/exports';
 
@@ -36,6 +38,21 @@ export type SeriesPermutationPaths<T extends readonly PermutationGenerator[]> =
 	StringifyPathRecord<{
 		[K in ExtractIndices<T>]: BuildPermutationPath<K, T[K]['permutationPaths'], true>;
 	}>;
+
+export type SeriesMapInput<T extends readonly PermutationGenerator[]> = Extract<
+	ShallowFlatTuple<{
+		[K in keyof T]: T[K] extends Never
+			? readonly []
+			: T[K] extends Series<infer U>
+				? U
+				: readonly [T[K]];
+	}>,
+	readonly PermutationGenerator[]
+>;
+
+export type SeriesMapEach<T extends readonly PermutationGenerator[]> = ShallowFlatTuple<{
+	[K in keyof T]: T[K] extends Each<infer U> ? U : readonly [];
+}>;
 
 /**
  * TODO: This could be an interface but because of variance issues (`in`, `out`) we are forced to use type

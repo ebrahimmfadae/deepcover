@@ -2,38 +2,19 @@ import type { PermutationGenerator } from '#src/permutation/definitions';
 import type { AsOptional, Optional } from '#src/permutation/modifiers/optional.types';
 import { checkPermutationType } from '#src/permutation/primitive/check-permutation-type';
 import type { Never } from '#src/permutation/primitive/never.types';
-import { merge } from '#src/permutation/utils';
 
+/**
+ * Optional modifier is only respected in record() which has paths. It has no effect on the
+ * standalone permutations.
+ */
 export function optional(input: Never): Never;
 export function optional<const T extends PermutationGenerator>(input: AsOptional<T>): T;
 export function optional<const T extends PermutationGenerator>(input: T): Optional<T>;
 export function optional(input: PermutationGenerator): Optional | Never {
 	if (checkPermutationType(input, 'never') || isOptional(input)) return input;
-	const modifiers = ['optional', ...input.modifiers];
-	return Object.assign(Object.create(null), {
-		*[Symbol.iterator]() {
-			yield* input;
-		},
-		get size() {
-			return input.size;
-		},
+	return Object.assign(Object.create(null), input, {
 		get modifiers() {
-			return modifiers;
-		},
-		get originalInputArg() {
-			return input.originalInputArg;
-		},
-		get type() {
-			return input.type;
-		},
-		get structure() {
-			return input.structure;
-		},
-		get permutationPaths() {
-			return input.permutationPaths;
-		},
-		get primitivePermutationPaths() {
-			return input.primitivePermutationPaths;
+			return ['optional', ...input.modifiers];
 		},
 		extract(paths) {
 			return optional(input.extract(paths));
@@ -41,13 +22,7 @@ export function optional(input: PermutationGenerator): Optional | Never {
 		exclude(paths) {
 			return optional(input.exclude(paths));
 		},
-		generatorAt(path) {
-			return input.generatorAt(path);
-		},
-		override(v) {
-			return merge(this, v);
-		},
-	} satisfies Optional);
+	} satisfies Partial<Optional>);
 }
 
 export function isOptional(v: PermutationGenerator): v is Optional {

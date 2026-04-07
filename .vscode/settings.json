@@ -11,7 +11,8 @@
 	"typescript.tsdk": "node_modules/typescript/lib",
 	"typescript.preferences.autoImportSpecifierExcludeRegexes": [
 		"^console$",
-		"/export$",
+		"/exports$",
 		"^node:console$"
-	]
+	],
+	"editor.defaultFormatter": "esbenp.prettier-vscode"
 }
