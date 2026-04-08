@@ -1,9 +1,24 @@
-import { eachFixtures, expectEach } from '#src/permutation/primitive/each/each.fixture';
+import type { PermutationGenerator } from '#src/permutation/definitions';
+import {
+	eachInputValues,
+	expectToBeEach,
+	generateEachFixtures,
+} from '#src/permutation/primitive/each/each.fixture';
 
-for (const e of eachFixtures) {
+const fixtures = generateEachFixtures(eachInputValues).map(
+	({ name, shouldBeOptional, create }) => ({
+		name,
+		create,
+		expect(v: PermutationGenerator) {
+			expectToBeEach(v, [], shouldBeOptional);
+		},
+	}),
+);
+
+for (const e of fixtures) {
 	describe(e.name, () => {
-		test(`.extract()`, () => expectEach(e.generator.extract()));
-		test(`.extract([])`, () => expectEach(e.generator.extract([])));
-		test(`.extract(['key'])`, () => expectEach(e.generator.extract(['a'])));
+		test(`.extract() => each()`, () => e.expect(e.create().extract()));
+		test(`.extract([]) => each()`, () => e.expect(e.create().extract([])));
+		test(`.extract(['key']) => each()`, () => e.expect(e.create().extract(['key'])));
 	});
 }

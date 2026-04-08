@@ -1,66 +1,59 @@
-import { optional } from '#src/permutation/modifiers/optional';
-import { each } from '#src/permutation/primitive/each/each';
-import { eachFixtures, expectEach } from '#src/permutation/primitive/each/each.fixture';
+import type { PermutationGenerator } from '#src/permutation/definitions';
+import { serializeArgs } from '#src/permutation/primitive/common.fixture';
+import { expectToBeEach, generateEachFixtures } from '#src/permutation/primitive/each/each.fixture';
+import type { IterableElement } from 'type-fest';
 
-for (const e0 of eachFixtures) {
-	// 	describe(e0.name, () => {
-	// 		for (const e1 of eachFixtures) {
-	// 			test(`.outputMerge(${e1.name})`, () => {
-	// 				const o = e0.generator.outputMerge(e1.generator);
-	// 				expectEach(o, e1.input.length ? e1.input : e0.input);
-	// 			});
-	// 		}
-	// 	});
+function fixtures() {
+	return generateEachFixtures([1, 2]).map((a) => ({
+		name: a.name,
+		e: generateEachFixtures([3, 4]).map((b) => {
+			const result = getResult(a, b);
+			return {
+				name: b.name,
+				result: result.name,
+				create() {
+					return a.create().outputMerge(b.create());
+				},
+				expect(v: PermutationGenerator) {
+					expectToBeEach(v, result.input, result.shouldBeOptional);
+				},
+			};
+		}),
+	}));
 }
 
-// describe('each()', () => {
-// 	test(`.outputMerge(optional(each(1)))`, () => {
-// 		const o = each().outputMerge(optional(each(1)));
-// 		expectEach(o, [1], true);
-// 	});
-// });
+function getResult(
+	a: IterableElement<ReturnType<typeof generateEachFixtures<readonly [1, 2]>>>,
+	b: IterableElement<ReturnType<typeof generateEachFixtures<readonly [3, 4]>>>,
+) {
+	if (a.input.length === 0 && b.input.length === 0)
+		return { name: `each()`, input: [], shouldBeOptional: false };
+	if (a.input.length === 0)
+		return { name: b.name, input: b.input, shouldBeOptional: b.shouldBeOptional };
+	if (b.input.length === 0)
+		return { name: a.name, input: a.input, shouldBeOptional: a.shouldBeOptional };
+	if (a.shouldBeOptional && b.shouldBeOptional) {
+		const input = [...a.input, ...b.input];
+		return {
+			name: `optional(each(${serializeArgs(input)}))`,
+			input,
+			shouldBeOptional: true,
+		};
+	}
+	if (!b.shouldBeOptional) return { name: b.name, input: b.input, shouldBeOptional: false };
+	else {
+		const input = [...a.input, ...b.input];
+		return {
+			name: `each(${serializeArgs(input)})`,
+			input,
+			shouldBeOptional: false,
+		};
+	}
+}
 
-// describe('each(1)', () => {
-// 	test(`.outputMerge(optional(each(2)))`, () => {
-// 		const o = each(1).outputMerge(optional(each(2)));
-// 		expect(o.type).toBe('series');
-// 		expect(Iterator.from(o).toArray()).toStrictEqual([1, 2]);
-// 		expect(o.modifiers).lengthOf(0);
-// 		expect(o.permutationPaths).toStrictEqual(['#0', '#1']);
-// 		expect(o.primitivePermutationPaths).toStrictEqual(['#0', '#1']);
-// 	});
-// });
-
-// describe('optional(each(1))', () => {
-// 	test(`.outputMerge(optional(each(2)))`, () => {
-// 		const o = optional(each(1)).outputMerge(optional(each(2)));
-// 		expect(o.type).toBe('series');
-// 		expect(Iterator.from(o).toArray()).toStrictEqual([1, 2]);
-// 		expect(o.modifiers).includes('optional');
-// 		expect(o.permutationPaths).toStrictEqual(['#0', '#1']);
-// 		expect(o.primitivePermutationPaths).toStrictEqual(['#0', '#1']);
-// 	});
-// });
-
-// describe('optional(each(1))', () => {
-// 	test(`.outputMerge(each(2))`, () => {
-// 		const o = optional(each(1)).outputMerge(each(2));
-// 		expectEach(o, [2]);
-// 	});
-// });
-
-// describe('optional(each(1))', () => {
-// 	test(`.outputMerge(each())`, () => {
-// 		const o = optional(each(1)).outputMerge(each());
-// 		expectEach(o, [1], true);
-// 	});
-// });
-
-describe('a', () => {
-	test(`b`, () => {
-		const o = optional(each(1, 2, 3)).outputMerge(optional(each(2, 3, 5)));
-		for (const element of o) {
-			console.log(element);
-		}
+for (const { name, e } of fixtures()) {
+	describe(name, () => {
+		for (const e1 of e)
+			test(`.outputMerge(${e1.name}) => ${e1.result}`, () => e1.expect(e1.create()));
 	});
-});
+}
