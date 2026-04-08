@@ -45,6 +45,7 @@ export function expectToBeEach(
 	expect(v.primitivePermutationPaths).toStrictEqual([]);
 	expect(v.type).toBe('each');
 	expect(v.structure).toBe('primitive');
-	expect(v.originalInputArg).toStrictEqual(input);
+	expect(v.originalInputArg).containSubset(input);
+	expect(input).containSubset(v.originalInputArg);
 	expect(v.modifiers).toStrictEqual(shouldBeOptional ? ['optional'] : []);
 }

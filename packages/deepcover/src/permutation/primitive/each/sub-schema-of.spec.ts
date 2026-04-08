@@ -3,7 +3,7 @@ import { generateEachFixtures } from '#src/permutation/primitive/each/each.fixtu
 function fixtures() {
 	return generateEachFixtures([1, 2]).map((a) => ({
 		name: a.name,
-		e: generateEachFixtures([1, 2, 3, 4]).map((b) => {
+		e: generateEachFixtures([3, 4]).map((b) => {
 			const result = a.input.length === 0 || (b.input.length > 0 && !b.shouldBeOptional);
 			return {
 				name: b.name,

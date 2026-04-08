@@ -1,5 +1,5 @@
 import type { PermutationGenerator } from '#src/permutation/definitions';
-import { serializeArgs } from '#src/permutation/primitive/common.fixture';
+import { generateOutputMerge, serializeArgs } from '#src/permutation/primitive/common.fixture';
 import { expectToBeEach, generateEachFixtures } from '#src/permutation/primitive/each/each.fixture';
 import type { IterableElement } from 'type-fest';
 
@@ -26,14 +26,13 @@ function getResult(
 	a: IterableElement<ReturnType<typeof generateEachFixtures<readonly [1, 2]>>>,
 	b: IterableElement<ReturnType<typeof generateEachFixtures<readonly [3, 4]>>>,
 ) {
+	const product = generateOutputMerge(a.create(), b.create());
+	const input = new Set(product).values().toArray();
 	if (a.input.length === 0 && b.input.length === 0)
-		return { name: `each()`, input: [], shouldBeOptional: false };
-	if (a.input.length === 0)
-		return { name: b.name, input: b.input, shouldBeOptional: b.shouldBeOptional };
-	if (b.input.length === 0)
-		return { name: a.name, input: a.input, shouldBeOptional: a.shouldBeOptional };
+		return { name: `each()`, input, shouldBeOptional: false };
+	if (a.input.length === 0) return { name: b.name, input, shouldBeOptional: b.shouldBeOptional };
+	if (b.input.length === 0) return { name: a.name, input, shouldBeOptional: a.shouldBeOptional };
 	if (a.shouldBeOptional && b.shouldBeOptional) {
-		const input = [...a.input, ...b.input];
 		return {
 			name: `optional(each(${serializeArgs(input)}))`,
 			input,
@@ -42,7 +41,6 @@ function getResult(
 	}
 	if (!b.shouldBeOptional) return { name: b.name, input: b.input, shouldBeOptional: false };
 	else {
-		const input = [...a.input, ...b.input];
 		return {
 			name: `each(${serializeArgs(input)})`,
 			input,
