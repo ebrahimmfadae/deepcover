@@ -19,6 +19,9 @@ import {
 	type ExpandableObject,
 } from '#src/utils/expandable-check';
 
+// TODO: Should we treat empty record as primitive?
+// TODO: Should remove empty trail in a tuple?
+
 // TODO: Empty spaces in array/pojo structure should not be included in paths.
 //			Also the should be ignored from series
 

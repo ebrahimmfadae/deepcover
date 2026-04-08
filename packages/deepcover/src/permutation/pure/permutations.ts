@@ -20,7 +20,7 @@ type Length<T> = readonly unknown[] extends T
 type BuildResultArray<T, S extends number> = [T] extends [never]
 	? readonly []
 	: number extends S
-		? T[]
+		? readonly T[]
 		: Readonly<BuildTuple<T, S>>;
 
 type CoalesceBoolean<T extends boolean | undefined> = IfElse<T, true, false, false | undefined>;
@@ -37,27 +37,31 @@ export type Permutations<T extends Iterable<unknown>, U extends PermutationsOpti
 	BuildResultArray<IterableElement<T>, U['size']>
 >;
 
-export function* permutations<
+export function permutations<const T extends Iterable<unknown>>(
+	input: T,
+): Generator<Permutations<T, typeof defaultPermutationsOptions>, void, unknown>;
+export function permutations<
 	const T extends Iterable<unknown>,
-	const U extends PermutationsOptions = typeof defaultPermutationsOptions,
->(input: T, options?: U & PermutationsOptions): Generator<Permutations<T, U>, void, unknown> {
+	const U extends PermutationsOptions,
+>(input: T, options: U): Generator<Permutations<T, U>, void, unknown>;
+export function* permutations(
+	input: Iterable<unknown>,
+	options?: PermutationsOptions,
+): Generator<Permutations<Iterable<unknown>, PermutationsOptions>, void, unknown> {
 	const {
 		size = defaultPermutationsOptions.size,
 		exclusive = defaultPermutationsOptions.exclusive,
 	} = options ?? ({} as PermutationsOptions);
 	const iterator = Iterator.from(input);
 	if (size < 0) return;
-	else if (size === 0) yield [] as unknown as Permutations<T, U>;
+	else if (size === 0) yield [];
 	else if (size === 1) {
-		yield* iterator.map((v) => [v]) as Iterable<Permutations<T, U>>;
+		yield* iterator.map((v) => [v]);
 	} else {
 		const indexedInput = cachedIterable(iterableWithIndex(iterator));
 		const roller = Iterator.from(indexedInput).toArray();
 		if (roller.length === 0 || (exclusive && roller.length < size)) return;
-		if (roller.length === 1 && !exclusive)
-			yield new Array(size).fill(roller[0]![0]) as unknown as Permutations<T, U>;
-		else if (roller.length === size && exclusive)
-			yield roller.map((v) => v[0]) as unknown as Permutations<T, U>;
+		if (roller.length === 1 && !exclusive) yield new Array(size).fill(roller[0]![0]);
 		else {
 			const iterators = Array.from(new Array(size), (_, i) =>
 				exclusive
@@ -74,7 +78,7 @@ export function* permutations<
 					!exclusive ||
 					output.map((v) => v[1]).length === new Set(output.map((v) => v[1])).size
 				)
-					yield output.map((v) => v[0]) as unknown as Permutations<T, U>;
+					yield output.map((v) => v[0]);
 				for (let pivot = size - 1; pivot >= 0; pivot--) {
 					const { done, value } = iterators[pivot]!.next();
 					if (!done) {
