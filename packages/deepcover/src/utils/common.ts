@@ -1,6 +1,7 @@
 import type { PermutationGenerator } from '#src/permutation/definitions';
 import type { Expandable, ExpandableArray } from '#src/utils/expandable-check';
 import type { UnionToTuple } from '#src/utils/union-utils';
+import type { AllUnionFields } from 'type-fest';
 
 export type TupleToUnion<T extends readonly unknown[]> = T[number];
 export type BuildTuple<T, S, U extends readonly unknown[] = readonly []> = (
@@ -78,3 +79,7 @@ export type Stringify<T extends Primitive> = T extends string ? T : `${T}`;
 export type Loose<T extends PermutationGenerator> = Omit<T, 'modifiers'> & {
 	readonly modifiers: readonly string[];
 };
+
+export function unionFields<T>(v: T): AllUnionFields<T> {
+	return v as AllUnionFields<T>;
+}
