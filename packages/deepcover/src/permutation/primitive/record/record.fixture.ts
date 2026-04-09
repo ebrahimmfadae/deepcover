@@ -1,97 +1,120 @@
-import { each, record } from '#src/permutation/exports';
-import { escapePropertyKey, type Base } from '#src/permutation/primitive/common.fixture';
-import { eachFixtures } from '#src/permutation/primitive/each/each.fixture';
+import type { PermutationGenerator, Structure } from '#src/permutation/definitions';
+import { optional } from '#src/permutation/modifiers/optional';
+import { escapePropertyKey } from '#src/permutation/primitive/common.fixture';
+import { generateEachFixtures } from '#src/permutation/primitive/each/each.fixture';
+import { record } from '#src/permutation/primitive/record/record';
 import { cachedIterable } from '#src/permutation/pure/cached-iterable';
+import { combinations } from '#src/permutation/pure/combinations';
 import { concat } from '#src/permutation/pure/concat';
 import { explicitPermutations } from '#src/permutation/pure/explicit-permutations';
 import { permutations } from '#src/permutation/pure/permutations';
-import { reiterate } from '#src/permutation/pure/reiterable';
-import { isExpandableArray, isExpandableObject } from '#src/utils/expandable-check';
+import type { IterableElement } from 'type-fest';
 
-export function generateRecordFixtures(b: Iterable<Base> = eachFixtures, level = 0) {
+export function generateRecordFixtures(
+	b: Iterable<Base> = cachedIterable(adaptEach(generateEachFixtures([1, 2]))),
+	level = 0,
+) {
 	const r = getRecords(b);
 	if (level === 0) return r;
-	return generateRecordFixtures(cachedIterable(concat(b, r)), level - 1);
+	return generateRecordFixtures(concat(b, r), level - 1);
 }
 
-export function expectRecord(
-	base: Base<Readonly<Record<PropertyKey, unknown>> | readonly unknown[]>,
-) {
-	const stringifiedOutput = base.output
-		.map((v) => Object.fromEntries(Object.entries(v).sort((a, b) => (b[0] < a[0] ? 1 : -1))))
-		.map((v) => JSON.stringify(v));
-	const calculatedStringifiedOutput = new Set(
-		Iterator.from(base.generator)
-			.map((v) =>
-				Object.fromEntries(
-					Object.entries(v as object).sort((a, b) =>
-						b[0] === a[0] ? 0 : b[0] < a[0] ? 1 : -1,
-					),
-				),
-			)
-			.map((v) => JSON.stringify(v)),
-	);
-	const v = base.generator;
-	expect(calculatedStringifiedOutput).toStrictEqual(new Set(stringifiedOutput));
-	expect(v.size).toBe(BigInt(base.output.length));
-	expect(v.permutationPaths.toSorted()).toStrictEqual(base.paths.toSorted());
-	expect(v.primitivePermutationPaths.toSorted()).toStrictEqual(base.primitivePaths.toSorted());
-	expect(v.type).toBe('record');
-	expect(v.structure).toBeOneOf(['array', 'pojo']);
-	if (isExpandableArray(base.input)) expect(v.structure).toBe('array');
-	else if (isExpandableObject(base.input)) expect(v.structure).toBe('pojo');
-	expect(v.modifiers).toStrictEqual([]);
-	expect(v.originalInputArg).toStrictEqual(base.input);
+export function adaptEach<
+	T extends {
+		readonly name: string;
+		readonly input: readonly unknown[];
+		readonly shouldBeOptional: boolean;
+		readonly structure: Structure;
+		readonly create: () => PermutationGenerator;
+	},
+>(v: Iterable<T>) {
+	return Iterator.from(v).map(({ input, ...rest }) => ({
+		input,
+		output: input,
+		paths: [] as const,
+		primitivePaths: [] as const,
+		...rest,
+	}));
 }
 
-function getRecords<T extends Iterable<Base>>(base: T) {
+function* getRecords<T extends Iterable<Base>>(base: T) {
 	const perm = cachedIterable(
-		concat(permutations(base, { size: 0 }), permutations(base, { size: 1 })),
+		explicitPermutations([
+			[{ shouldBeOptional: false }, { shouldBeOptional: true }],
+			concat(
+				permutations(base, { size: 0 }),
+				permutations(base, { size: 1 }),
+				permutations(base, { size: 2 }),
+			),
+		]),
 	);
-	return concat(
-		Iterator.from(perm).map((v) => {
-			const buildKey = (i: number) => `key${i}`;
-			const entries = v.map((v, i) => [buildKey(i), v.generator] as const);
-			const schema = Object.fromEntries(entries);
-			const name = `record({${v.map((u, i) => `${escapePropertyKey(buildKey(i))}:${u.name}`)}})`;
-			const generator = record(schema);
-			const output = explicitPermutations(
-				v.map((u, i) => u.output.map((w) => [buildKey(i), w] as const)),
-			)
-				.map((u) => u.filter((w) => w !== undefined))
-				.map((u) => Object.fromEntries(u))
-				.toArray();
-			const paths = getPaths(v, buildKey);
-			const primitivePaths = getPrimitivePaths(v, buildKey);
-			return {
-				name,
-				input: schema,
-				primitive: false,
-				paths,
-				primitivePaths,
-				output,
-				generator,
-			} satisfies Base;
-		}),
-		Iterator.from(perm).map((v) => {
-			const buildKey = (i: number) => `${i}`;
-			const schema = v.map((u) => u.generator);
-			const name = `record([${v.map((u) => u.name)}])`;
-			const generator = record(schema);
-			const output = explicitPermutations(v.map((u) => u.output)).toArray();
-			const paths = getPaths(v, buildKey);
-			const primitivePaths = getPrimitivePaths(v, buildKey);
-			return {
-				name,
-				input: schema,
-				primitive: false,
-				paths,
-				primitivePaths,
-				output,
-				generator,
-			} satisfies Base;
-		}),
+	// POJO
+	for (const [{ shouldBeOptional }, v] of perm) {
+		const buildKey = (i: number) => `key${i}`;
+		const nameRaw = `record({${v.map((u, i) => `${escapePropertyKey(buildKey(i))}:${u.name}`)}})`;
+		const name = shouldBeOptional ? `optional(${nameRaw})` : nameRaw;
+		const output = getOutputs(v, buildKey);
+		const entries = v.map((u, i) => [buildKey(i), u.create()] as const);
+		const schema = Object.fromEntries(entries);
+		const paths = getPaths(v, buildKey);
+		const primitivePaths = getPrimitivePaths(v, buildKey);
+		yield {
+			name,
+			input: schema,
+			output,
+			paths,
+			primitivePaths,
+			shouldBeOptional,
+			structure: 'pojo' as const,
+			create() {
+				return shouldBeOptional ? optional(record(schema)) : record(schema);
+			},
+		};
+	}
+	// ARRAY
+	for (const [{ shouldBeOptional }, v] of perm) {
+		const buildKey = (i: number) => `${i}`;
+		const nameRaw = `record([${v.map((u) => u.name)}])`;
+		const name = shouldBeOptional ? `optional(${nameRaw})` : nameRaw;
+		const schema = v.map((u) => u.create());
+		const output = getOutputs(v, buildKey).map((u) => {
+			type Element = IterableElement<T>['output'][number];
+			const aa = new Array<Element>(v.length);
+			for (let i = 0; i < aa.length; i++) if (`${i}` in u) aa[i] = u[`${i}`];
+			return aa;
+		});
+		const paths = getPaths(v, buildKey);
+		const primitivePaths = getPrimitivePaths(v, buildKey);
+		yield {
+			name,
+			input: schema,
+			output,
+			paths,
+			primitivePaths,
+			shouldBeOptional,
+			structure: 'array' as const,
+			create() {
+				return shouldBeOptional ? optional(record(schema)) : record(schema);
+			},
+		};
+	}
+}
+
+function getOutputs<T extends readonly Base[]>(v: T, buildKey: (i: number) => string) {
+	const vv = v.map((u, i) => [buildKey(i), u] as const).filter((u) => u[1].output.length > 0);
+	if (vv.length === 0) return [{}];
+	const requiredFields = vv.filter((u) => !u[1].shouldBeOptional);
+	const optionalFields = vv.filter((u) => u[1].shouldBeOptional);
+	if (requiredFields.length === 0 && optionalFields.length === 0) return [{}];
+	const optionalFieldsSet = combinations(optionalFields, { min: 0 });
+	const mergedFields = optionalFieldsSet.map((u) => [...requiredFields, ...u]);
+	const input = mergedFields.map((u) =>
+		u.map((w) => explicitPermutations([[w[0]], w[1].output])),
 	);
+	return input
+		.map((u) => explicitPermutations(u))
+		.flatMap((u) => u.map((w) => Object.fromEntries(w)))
+		.toArray();
 }
 
 function getPaths(base: readonly Base[], buildKey: (i: number) => string) {
@@ -106,8 +129,23 @@ function getPrimitivePaths(base: readonly Base[], buildKey: (i: number) => strin
 		const k = buildKey(i);
 		return v.primitivePaths.length
 			? v.primitivePaths.map((w) => `${k}.${w}`)
-			: v.primitive
+			: v.structure === 'primitive'
 				? [k]
 				: [];
 	});
 }
+
+type Base = {
+	readonly name: string;
+	readonly input: unknown;
+	readonly output: readonly unknown[];
+	readonly paths: readonly string[];
+	readonly primitivePaths: readonly string[];
+	readonly shouldBeOptional: boolean;
+	readonly structure: Structure;
+	readonly create: () => PermutationGenerator;
+};
+
+// TODO: Add description about loop breaking to README.md
+// If two files have circular imports they should be resolved or intentionally escaped.
+// If in a large data set, some testcases will break the loop, it is not required to run them separately

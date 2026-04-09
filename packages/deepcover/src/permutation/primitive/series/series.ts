@@ -14,6 +14,7 @@ import type {
 import { allPathLevels, optionalWiseConcat } from '#src/permutation/utils';
 import type { Loose } from '#src/utils/common';
 
+export function series(): Never;
 export function series<const T extends readonly Never[]>(...values: T): Never;
 export function series<const T extends readonly (Each | Never)[]>(
 	...values: T

@@ -25,6 +25,7 @@ export function* generateEachFixtures<const T extends readonly unknown[]>(values
 			: `each(${serializeArgs(input)})`,
 		input,
 		shouldBeOptional,
+		structure: 'primitive' as const,
 		create() {
 			const generator = each(...input);
 			return shouldBeOptional ? optional(generator) : generator;
