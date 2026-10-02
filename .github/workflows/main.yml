@@ -4,6 +4,11 @@ on:
     push:
         branches:
             - main
+
+permissions:
+    contents: read
+    id-token: write
+
 jobs:
     build:
         runs-on: ubuntu-24.04
@@ -17,6 +22,4 @@ jobs:
                   registry-url: 'https://registry.npmjs.org'
             - run: npm ci
             - run: npm -w ./packages/deepcover run build
-            - run: npm -w ./packages/deepcover publish --tag alpha
-              env:
-                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+            - run: npm -w ./packages/deepcover stage publish --tag alpha

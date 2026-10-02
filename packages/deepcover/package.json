@@ -20,6 +20,10 @@
     "./utils": "./dist/utils/exports.js"
   },
   "author": "ebrahimmfadae@gmail.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ebrahimmfadae/deepcover.git"
+  },
   "license": "MIT",
   "files": [
     "dist"
