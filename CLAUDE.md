@@ -55,3 +55,5 @@ Specs sit next to the source. The `*.fixture.ts` files (for example, `record.fix
 - Prettier: tabs (width 4), single quotes, trailing commas, print width 100.
 - ESLint enforces `consistent-type-imports` and `consistent-type-exports`, `import/no-cycle`, and no `any`. Unused variables must be prefixed with `_`.
 - The TS config is strict and also enables `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`, `verbatimModuleSyntax`, and `erasableSyntaxOnly`, which means no enums and no namespaces.
+- Comments: concise, only where the code doesn't tell the story (the why, non-obvious constraints). No restating what the code does.
+- Session replies: concise, no explanatory filler.

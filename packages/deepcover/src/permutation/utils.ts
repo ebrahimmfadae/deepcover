@@ -2,6 +2,7 @@ import type { PermutationGenerator } from '#src/permutation/definitions';
 import { clean } from '#src/permutation/modifiers/clean';
 import { isOptional, optional } from '#src/permutation/modifiers/optional';
 import { series } from '#src/permutation/primitive/series/series';
+import { cachedIterable } from '#src/permutation/pure/cached-iterable';
 
 export function allPathLevels(path: string): string[] {
 	const splitted = path.split('.');
@@ -36,4 +37,16 @@ export function optionalWiseConcat(
 		if (isOptional(b)) return series(clean(a), clean(b));
 	}
 	return b;
+}
+
+// NOTE: Fixed threshold. Caching trades memory (grows with size) for not regenerating on every
+//		restart. Expose it as an option if callers need to tune it.
+const CACHE_SIZE_LIMIT = 10_000n;
+
+/**
+ * Caches small generators so restarting them inside a cartesian product replays them instead of
+ * regenerating them. Large ones are re-iterated to keep memory bounded.
+ */
+export function cacheIfSmall<T>(v: Iterable<T>, size: bigint): Iterable<T> {
+	return size <= CACHE_SIZE_LIMIT ? cachedIterable(v) : v;
 }

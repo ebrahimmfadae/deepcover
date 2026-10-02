@@ -11,7 +11,11 @@ export function* explicitPermutations<const T extends readonly Iterable<unknown>
 		yield [] as ExplicitPermutations<T>;
 		return;
 	}
-	const cacheIfEffective = input.length === 1 ? input : input.map((v) => cachedIterable(v));
+	// Only one-shot iterables (whose iterator is themselves) need caching to be restarted.
+	// Index 0 is never restarted, so it is never cached.
+	const cacheIfEffective = input.map((v, i) =>
+		i > 0 && (v[Symbol.iterator]() as unknown) === v ? cachedIterable(v) : v,
+	);
 	const iterables = cacheIfEffective.map((v) => Iterator.from(v));
 	const output = new Array(iterables.length);
 	for (let i = 0; i < iterables.length; i++) {

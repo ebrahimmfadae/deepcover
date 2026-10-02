@@ -1,6 +1,7 @@
 import { combo } from '#src/permutation/combo';
 import type { InferPermutationType, PermutationGenerator } from '#src/permutation/definitions';
 import { explicitPermutations } from '#src/permutation/pure/explicit-permutations';
+import { cacheIfSmall } from '#src/permutation/utils';
 
 /**
  * This function performs cartesian mutate. Meaning that it will first mutate all `a` permutations respected to `limits` value,
@@ -14,6 +15,6 @@ export function* mutate<T extends PermutationGenerator, U extends PermutationGen
 	limits?: { max?: number },
 ): Generator<{ before: InferPermutationType<T>; after: unknown }, void, unknown> {
 	const merged = a.outputMerge(combo(b, limits));
-	const permutations = explicitPermutations([a, merged]);
+	const permutations = explicitPermutations([a, cacheIfSmall(merged, merged.size)]);
 	yield* permutations.map((v) => ({ before: v[0] as InferPermutationType<T>, after: v[1] }));
 }

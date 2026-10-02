@@ -9,7 +9,7 @@ import type { MyRecord, RecordInput } from '#src/permutation/primitive/record/re
 import { series } from '#src/permutation/primitive/series/series';
 import { explicitPermutations } from '#src/permutation/pure/explicit-permutations';
 import { REMOVE } from '#src/permutation/symbols';
-import { allPathLevels, optionalWiseConcat } from '#src/permutation/utils';
+import { allPathLevels, cacheIfSmall, optionalWiseConcat } from '#src/permutation/utils';
 import type { Loose } from '#src/utils/common';
 import { hasKey } from '#src/utils/entries';
 import {
@@ -99,7 +99,12 @@ function recordPojo<const T extends ExpandableObject<PermutationGenerator>>(
 	return Object.assign(Object.create(null), {
 		...b,
 		*[Symbol.iterator]() {
-			const iterableInput = r.map((v) => Iterator.from(v[1]).map((u) => [v[0], u]));
+			const iterableInput = r.map((v) =>
+				cacheIfSmall(
+					{ [Symbol.iterator]: () => Iterator.from(v[1]).map((u) => [v[0], u] as const) },
+					v[1].size,
+				),
+			);
 			yield* explicitPermutations(iterableInput)
 				.map((v) => v.filter((u) => !!u).filter((u) => u[1] !== REMOVE))
 				.map((v) => Object.fromEntries(v));
@@ -114,7 +119,7 @@ function recordArray<const T extends ExpandableArray<PermutationGenerator>>(
 	return Object.assign(Object.create(null), {
 		...b,
 		*[Symbol.iterator]() {
-			yield* explicitPermutations(r.map((v) => v[1])).map((v) => {
+			yield* explicitPermutations(r.map((v) => cacheIfSmall(v[1], v[1].size))).map((v) => {
 				const clone = new Array(v.length);
 				v.forEach((u, i) => {
 					if (u !== REMOVE) clone[i] = u;
