@@ -33,3 +33,6 @@ Welcome to DeepCover, the ultimate tool for maximizing your test coverage! 🌟 
 ### Heads up
 
 - VSCode built-in TypeScript SDK has stricter limits; To avoid excessive depth errors, use `node_modules` SDK
+
+NOTE: Might be useful.
+type EventHandler<E extends SyntheticEvent<any>> = { bivarianceHack(event: E): void }"bivarianceHack"];
